@@ -16,6 +16,7 @@ export declare class ComponentsService {
         supplierId?: number;
     }): Promise<Component[]>;
     findOne(id: number): Promise<Component>;
+    findByBarcode(barcode: string): Promise<Component>;
     findByReference(ref: string): Promise<Component>;
     create(dto: CreateComponentDto): Promise<Component>;
     update(id: number, dto: Partial<CreateComponentDto>): Promise<Component>;

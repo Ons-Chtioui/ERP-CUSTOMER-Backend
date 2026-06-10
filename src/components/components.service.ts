@@ -60,6 +60,15 @@ async findOne(id: number): Promise<Component> {
     if (!c) throw new NotFoundException(`Composant #${id} introuvable`);
     return c;
 }
+async findByBarcode(barcode: string): Promise<Component> {
+  const c = await this.componentsRepo.findOne({
+    where: { barcode },
+    relations: { category: true, supplier: true },
+  });
+  if (!c) throw new NotFoundException(`Aucun composant avec le code-barres "${barcode}"`);
+  return c;
+}
+
 async findByReference(ref: string): Promise<Component> {
 const c=await this.componentsRepo.findOne({
     where: { reference: ref }, relations: { category: true, supplier: true },

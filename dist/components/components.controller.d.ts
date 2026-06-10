@@ -4,6 +4,7 @@ export declare class ComponentsController {
     private readonly svc;
     constructor(svc: ComponentsService);
     findAll(search?: string, categoryId?: string, supplierId?: string): Promise<import("./entities/component.entity").Component[]>;
+    findByBarcode(code: string): Promise<import("./entities/component.entity").Component>;
     categories(): Promise<import("./entities/category.entity").Category[]>;
     suppliers(): Promise<import("./entities/supplier.entity").Supplier[]>;
     findOne(id: number): Promise<import("./entities/component.entity").Component>;

@@ -45,6 +45,7 @@ let ComponentsController = class ComponentsController {
             supplierId: supplierId ? +supplierId : undefined,
         });
     }
+    findByBarcode(code) { return this.svc.findByBarcode(code); }
     categories() { return this.svc.findAllCategories(); }
     suppliers() { return this.svc.findAllSuppliers(); }
     findOne(id) { return this.svc.findOne(id); }
@@ -77,6 +78,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], ComponentsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('barcode/:code'),
+    (0, require_permissions_decorator_1.RequirePermissions)('stock.view'),
+    __param(0, (0, common_1.Param)('code')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ComponentsController.prototype, "findByBarcode", null);
 __decorate([
     (0, common_1.Get)('categories'),
     (0, require_permissions_decorator_1.RequirePermissions)('stock.view'),

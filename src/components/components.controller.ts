@@ -44,6 +44,10 @@ export class ComponentsController {
     });
   }
 
+  @Get('barcode/:code')
+  @RequirePermissions('stock.view')
+  findByBarcode(@Param('code') code: string) { return this.svc.findByBarcode(code); }
+
   @Get('categories')
   @RequirePermissions('stock.view')
   categories() { return this.svc.findAllCategories(); }
