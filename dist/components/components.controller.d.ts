@@ -22,9 +22,12 @@ export declare class ComponentsController {
     create(dto: CreateComponentDto): Promise<import("./entities/component.entity").Component>;
     update(id: number, dto: Partial<CreateComponentDto>): Promise<import("./entities/component.entity").Component>;
     remove(id: number): Promise<import("./entities/component.entity").Component>;
+    uploadImage(id: number, file: Express.Multer.File): Promise<{
+        imageUrl: string;
+    }>;
     createCategory(b: {
         nom: string;
         description?: string;
     }): Promise<import("./entities/category.entity").Category>;
-    createSupplier(b: any): Promise<import("./entities/supplier.entity").Supplier>;
+    createSupplier(b: Partial<import('./entities/supplier.entity').Supplier>): Promise<import("./entities/supplier.entity").Supplier>;
 }

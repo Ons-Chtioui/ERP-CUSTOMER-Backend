@@ -20,6 +20,17 @@ const component_entity_1 = require("./entities/component.entity");
 const category_entity_1 = require("./entities/category.entity");
 const supplier_entity_1 = require("./entities/supplier.entity");
 const inventory_item_entity_1 = require("./entities/inventory-item.entity");
+function generateEAN13() {
+    const prefix = '216';
+    const body = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10)).join('');
+    const digits = prefix + body;
+    let sum = 0;
+    for (let i = 0; i < 12; i++) {
+        sum += parseInt(digits[i]) * (i % 2 === 0 ? 1 : 3);
+    }
+    const check = (10 - (sum % 10)) % 10;
+    return digits + check;
+}
 let ComponentsService = class ComponentsService {
     componentsRepo;
     categoriesRepo;
@@ -79,7 +90,22 @@ let ComponentsService = class ComponentsService {
             if (!supplier)
                 throw new common_1.NotFoundException(`Fournisseur #${dto.supplierId} introuvable`);
         }
-        return this.componentsRepo.save(this.componentsRepo.create({ ...dto, category: category ?? undefined, supplier: supplier ?? undefined }));
+        let barcode = dto.barcode;
+        if (!barcode) {
+            let unique = false;
+            while (!unique) {
+                barcode = generateEAN13();
+                const dup = await this.componentsRepo.findOne({ where: { barcode } });
+                if (!dup)
+                    unique = true;
+            }
+        }
+        return this.componentsRepo.save(this.componentsRepo.create({
+            ...dto,
+            barcode,
+            category: category ?? undefined,
+            supplier: supplier ?? undefined,
+        }));
     }
     async update(id, dto) {
         const c = await this.findOne(id);
@@ -107,6 +133,10 @@ let ComponentsService = class ComponentsService {
         const c = await this.findOne(id);
         c.isActive = false;
         return this.componentsRepo.save(c);
+    }
+    async updateImageUrl(id, imageUrl) {
+        await this.componentsRepo.update(id, { imageUrl });
+        return this.findOne(id);
     }
     async getStockSummary(componentId) {
         const component = await this.findOne(componentId);

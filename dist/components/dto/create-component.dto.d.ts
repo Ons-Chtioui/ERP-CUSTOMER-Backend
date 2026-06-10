@@ -4,8 +4,10 @@ export declare class CreateComponentDto {
     description?: string;
     unite?: string;
     prixAchat?: number;
+    prixVente?: number;
     seuilAlerte?: number;
     barcode?: string;
+    imageUrl?: string;
     categoryId?: number;
     supplierId?: number;
 }

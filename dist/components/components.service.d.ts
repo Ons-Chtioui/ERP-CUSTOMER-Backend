@@ -20,6 +20,7 @@ export declare class ComponentsService {
     create(dto: CreateComponentDto): Promise<Component>;
     update(id: number, dto: Partial<CreateComponentDto>): Promise<Component>;
     deactivate(id: number): Promise<Component>;
+    updateImageUrl(id: number, imageUrl: string): Promise<Component>;
     getStockSummary(componentId: number): Promise<{
         componentId: number;
         totalQuantity: number;

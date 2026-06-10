@@ -9,6 +9,7 @@ export declare class Component {
     reference: string;
     unite: string;
     prixAchat: number;
+    prixVente: number;
     seuilAlerte: number;
     barcode: string;
     imageUrl: string;

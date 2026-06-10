@@ -10,7 +10,8 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
+import { Permission } from '../permissions/entities/permission.entity';
 import { LoginLog, LoginStatus } from './entities/login-log.entity';
 import { PasswordReset } from './entities/password-reset.entity';
 import { LoginDto } from './dto/login.dto';
@@ -105,8 +106,8 @@ export class AuthService {
   // ─────────────────────────────────────────────────────────────────
   buildTokens(user: User) {
     // Fusionner permissions du rôle + permissions individuelles
-    const rolePerms = user.role?.permissions?.map((p) => p.nom) ?? [];
-    const userPerms = user.permissions?.map((p) => p.nom) ?? [];
+    const rolePerms = user.role?.permissions?.map((p: Permission) => p.nom) ?? [];
+    const userPerms = user.permissions?.map((p: Permission) => p.nom) ?? [];
     const allPermissions = [...new Set([...rolePerms, ...userPerms])];
 
     const payload = {
@@ -169,8 +170,8 @@ export class AuthService {
     });
     if (!user) throw new NotFoundException('Utilisateur introuvable');
 
-    const rolePerms = user.role?.permissions?.map((p) => p.nom) ?? [];
-    const userPerms = user.permissions?.map((p) => p.nom) ?? [];
+    const rolePerms = user.role?.permissions?.map((p: Permission) => p.nom) ?? [];
+    const userPerms = user.permissions?.map((p: Permission) => p.nom) ?? [];
 
     return {
       id: user.id,

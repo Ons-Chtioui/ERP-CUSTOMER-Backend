@@ -23,10 +23,13 @@ export class Component {
   @Column({ name: 'prix_achat', type: 'decimal', precision: 12, scale: 4, default: 0 })
   prixAchat!: number;
 
+  @Column({ name: 'prix_vente', type: 'decimal', precision: 12, scale: 4, default: 0 })
+  prixVente!: number;
+
   @Column({ name: 'seuil_alerte', default: 0 })
   seuilAlerte!: number;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ length: 100, nullable: true, unique: true })
   barcode!: string;
 
   @Column({ name: 'image_url', length: 255, nullable: true })

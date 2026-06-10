@@ -10,7 +10,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 
 import { LoginLog } from './entities/login-log.entity';
 import { PasswordReset } from './entities/password-reset.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [

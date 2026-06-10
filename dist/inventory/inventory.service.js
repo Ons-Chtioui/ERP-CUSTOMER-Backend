@@ -104,7 +104,7 @@ let InventoryService = class InventoryService {
     async closeSession(sessionId, userId) {
         const session = await this.sessionsRepo.findOne({
             where: { id: sessionId },
-            relations: { warehouse: true, lines: true },
+            relations: { warehouse: true, lines: { component: true } },
         });
         if (!session)
             throw new common_1.NotFoundException('Session introuvable');

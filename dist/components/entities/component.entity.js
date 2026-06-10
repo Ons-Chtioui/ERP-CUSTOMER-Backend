@@ -22,6 +22,7 @@ let Component = class Component {
     reference;
     unite;
     prixAchat;
+    prixVente;
     seuilAlerte;
     barcode;
     imageUrl;
@@ -59,11 +60,15 @@ __decorate([
     __metadata("design:type", Number)
 ], Component.prototype, "prixAchat", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ name: 'prix_vente', type: 'decimal', precision: 12, scale: 4, default: 0 }),
+    __metadata("design:type", Number)
+], Component.prototype, "prixVente", void 0);
+__decorate([
     (0, typeorm_1.Column)({ name: 'seuil_alerte', default: 0 }),
     __metadata("design:type", Number)
 ], Component.prototype, "seuilAlerte", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 100, nullable: true }),
+    (0, typeorm_1.Column)({ length: 100, nullable: true, unique: true }),
     __metadata("design:type", String)
 ], Component.prototype, "barcode", void 0);
 __decorate([

@@ -2,7 +2,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Repository } from 'typeorm';
-import { User } from "../users/entities/user.entity";
+import { User } from '../users/entities/user.entity';
 import { LoginLog } from './entities/login-log.entity';
 import { PasswordReset } from './entities/password-reset.entity';
 import { LoginDto } from './dto/login.dto';

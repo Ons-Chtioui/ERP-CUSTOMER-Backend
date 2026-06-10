@@ -106,7 +106,7 @@ export class InventoryService {
   async closeSession(sessionId: number, userId: number) {
     const session = await this.sessionsRepo.findOne({
       where: { id: sessionId },
-      relations: { warehouse: true, lines: true },
+      relations: { warehouse: true, lines: { component: true } },
     });
     if (!session) throw new NotFoundException('Session introuvable');
     if (session.status !== SessionStatus.IN_PROGRESS)

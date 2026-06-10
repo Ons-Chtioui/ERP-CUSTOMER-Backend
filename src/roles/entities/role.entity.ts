@@ -1,36 +1,36 @@
-import { Permission } from 'src/permissions/entities/permission.entity';
-import { User } from 'src/users/entities/user.entity';
 import {
   Entity, PrimaryGeneratedColumn, Column,
   OneToMany, ManyToMany, JoinTable, CreateDateColumn,
 } from 'typeorm';
+import type { User } from '../../users/entities/user.entity';
+import { Permission } from '../../permissions/entities/permission.entity';
 
 @Entity('roles')
 export class Role {
   @PrimaryGeneratedColumn('increment')
-    id!: number;
+  id!: number;
 
   @Column({ unique: true, length: 80 })
-    nom!: string;   // slug : "super_admin", "admin", etc.
+  nom!: string;
 
   @Column({ length: 100 })
-    label!: string; // lisible : "Super Admin", "Admin Société"
+  label!: string;
 
   @Column({ type: 'text', nullable: true })
-    description!: string;
+  description!: string;
 
-  @OneToMany(() => User, (user) => user.role)
-    users!: User[];
+  // Lazy reference to User via string to break circular dependency
+  @OneToMany('User', (user: User) => user.role)
+  users!: User[];
 
-  // Permissions par défaut du rôle
   @ManyToMany(() => Permission, { eager: true })
-    @JoinTable({
-        name: 'role_permission',
-        joinColumn: { name: 'role_id' },
-        inverseJoinColumn: { name: 'permission_id' },
-    })
-    permissions!: Permission[];
+  @JoinTable({
+    name: 'role_permission',
+    joinColumn: { name: 'role_id' },
+    inverseJoinColumn: { name: 'permission_id' },
+  })
+  permissions!: Permission[];
 
   @CreateDateColumn({ name: 'created_at' })
-    createdAt!: Date;
+  createdAt!: Date;
 }

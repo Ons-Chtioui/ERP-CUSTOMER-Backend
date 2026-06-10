@@ -46,11 +46,14 @@ const ALL_PERMISSIONS = [
     { nom: 'users.edit', module: 'Utilisateurs', action: 'Modifier' },
     { nom: 'users.delete', module: 'Utilisateurs', action: 'Supprimer' },
     { nom: 'users.roles', module: 'Utilisateurs', action: 'Gérer rôles' },
+    { nom: 'users.permissions', module: 'Utilisateurs', action: 'Gérer permissions' },
     { nom: 'stock.view', module: 'Stock', action: 'Consulter' },
     { nom: 'stock.create', module: 'Stock', action: 'Créer entrée' },
     { nom: 'stock.edit', module: 'Stock', action: 'Modifier' },
     { nom: 'stock.delete', module: 'Stock', action: 'Supprimer' },
     { nom: 'stock.transfer', module: 'Stock', action: 'Transfert entrepôt' },
+    { nom: 'stock.alert', module: 'Stock', action: 'Gérer alertes' },
+    { nom: 'stock.inventory', module: 'Stock', action: 'Gérer inventaire' },
     { nom: 'bom.view', module: 'BOM', action: 'Consulter' },
     { nom: 'bom.create', module: 'BOM', action: 'Créer nomenclature' },
     { nom: 'bom.edit', module: 'BOM', action: 'Modifier' },
@@ -64,46 +67,90 @@ const ALL_PERMISSIONS = [
     { nom: 'credits.create', module: 'Commercial', action: 'Émettre avoir' },
     { nom: 'reports.view', module: 'Rapports', action: 'Consulter' },
     { nom: 'reports.export', module: 'Rapports', action: 'Exporter' },
-    { nom: 'stock.transfer', module: 'Stock', action: 'Transfert entrepôt' },
-    { nom: 'stock.alert', module: 'Stock', action: 'Gérer alertes' },
-    { nom: 'stock.inventory', module: 'Stock', action: 'Gérer inventaire' },
 ];
 const ALL_NOMS = ALL_PERMISSIONS.map((p) => p.nom);
 const ROLES_DEF = [
-    { nom: 'super_admin', label: 'Super Admin', perms: ALL_NOMS },
-    { nom: 'admin', label: 'Admin Société', perms: ALL_NOMS.filter(n => n !== 'users.delete') },
-    { nom: 'resp_stock', label: 'Resp. Stock', perms: ['stock.view', 'stock.create', 'stock.edit', 'stock.delete', 'stock.transfer', 'bom.view', 'bom.create', 'bom.edit'] },
-    { nom: 'resp_commercial', label: 'Resp. Commercial', perms: ['orders.view', 'orders.create', 'orders.validate', 'orders.cancel', 'invoices.view', 'invoices.create', 'quotes.create', 'bom.view', 'reports.view'] },
-    { nom: 'comptable', label: 'Comptable', perms: ['invoices.view', 'credits.create', 'reports.view', 'reports.export'] },
-    { nom: 'operateur', label: 'Opérateur', perms: ['stock.view', 'orders.view'] },
+    {
+        nom: 'super_admin',
+        label: 'Super Admin',
+        perms: ALL_NOMS,
+    },
+    {
+        nom: 'admin',
+        label: 'Admin Société',
+        perms: ALL_NOMS.filter((n) => n !== 'users.delete'),
+    },
+    {
+        nom: 'resp_stock',
+        label: 'Resp. Stock',
+        perms: [
+            'stock.view', 'stock.create', 'stock.edit', 'stock.delete',
+            'stock.transfer', 'stock.alert', 'stock.inventory',
+            'bom.view', 'bom.create', 'bom.edit',
+        ],
+    },
+    {
+        nom: 'resp_commercial',
+        label: 'Resp. Commercial',
+        perms: [
+            'orders.view', 'orders.create', 'orders.validate', 'orders.cancel',
+            'invoices.view', 'invoices.create', 'quotes.create',
+            'bom.view', 'reports.view',
+            'stock.view',
+        ],
+    },
+    {
+        nom: 'comptable',
+        label: 'Comptable',
+        perms: [
+            'invoices.view', 'credits.create',
+            'reports.view', 'reports.export',
+        ],
+    },
+    {
+        nom: 'operateur',
+        label: 'Opérateur',
+        perms: [
+            'stock.view', 'stock.inventory',
+            'orders.view',
+        ],
+    },
 ];
 async function seed() {
     const app = await core_1.NestFactory.createApplicationContext(app_module_1.AppModule);
     const permRepo = app.get((0, typeorm_1.getRepositoryToken)(permission_entity_1.Permission));
     const roleRepo = app.get((0, typeorm_1.getRepositoryToken)(role_entity_1.Role));
     const userRepo = app.get((0, typeorm_1.getRepositoryToken)(user_entity_1.User));
-    console.log('🌱 Création des permissions...');
+    console.log('🌱 Création/mise à jour des permissions...');
     const savedPerms = [];
     for (const p of ALL_PERMISSIONS) {
         let perm = await permRepo.findOne({ where: { nom: p.nom } });
-        if (!perm)
+        if (!perm) {
             perm = await permRepo.save(permRepo.create(p));
+            console.log(`   + ${p.nom}`);
+        }
         savedPerms.push(perm);
     }
     const permMap = Object.fromEntries(savedPerms.map((p) => [p.nom, p]));
-    console.log('🌱 Création des rôles...');
+    console.log('\n🌱 Création/mise à jour des rôles...');
     for (const r of ROLES_DEF) {
-        let role = await roleRepo.findOne({ where: { nom: r.nom } });
+        const permsForRole = r.perms.map((n) => permMap[n]).filter(Boolean);
+        let role = await roleRepo.findOne({
+            where: { nom: r.nom },
+            relations: { permissions: true },
+        });
         if (!role) {
-            role = roleRepo.create({
-                nom: r.nom,
-                label: r.label,
-                permissions: r.perms.map((n) => permMap[n]).filter(Boolean),
-            });
+            role = roleRepo.create({ nom: r.nom, label: r.label, permissions: permsForRole });
             await roleRepo.save(role);
+            console.log(`   + Rôle créé : ${r.label} (${permsForRole.length} permissions)`);
+        }
+        else {
+            role.permissions = permsForRole;
+            await roleRepo.save(role);
+            console.log(`   ↺ Rôle mis à jour : ${r.label} (${permsForRole.length} permissions)`);
         }
     }
-    console.log('🌱 Création du Super Admin...');
+    console.log('\n🌱 Vérification du Super Admin...');
     const superRole = await roleRepo.findOne({
         where: { nom: 'super_admin' },
         relations: { permissions: true },
@@ -120,15 +167,20 @@ async function seed() {
             isActive: true,
             emailVerifiedAt: new Date(),
         }));
+        console.log('   + Super Admin créé : admin@erp.com / Admin@1234');
     }
-    console.log('\n[OK] Seed termine avec succes !');
+    else {
+        await userRepo.update(existing.id, { role: superRole });
+        console.log('   ✓ Super Admin existant — rôle mis à jour');
+    }
+    console.log('\n✅ Seed terminé avec succès !');
     console.log('   Email    : admin@erp.com');
     console.log('   Password : Admin@1234');
-    console.log('   [!] Changez ce mot de passe apres le premier login !');
+    console.log('   ⚠️  Changez ce mot de passe après le premier login !');
     await app.close();
 }
 seed().catch((err) => {
-    console.error('[ERREUR] Seed :', err);
+    console.error('❌ Erreur seed :', err);
     process.exit(1);
 });
 //# sourceMappingURL=seed.js.map

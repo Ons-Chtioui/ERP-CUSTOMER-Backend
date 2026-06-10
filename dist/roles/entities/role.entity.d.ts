@@ -1,5 +1,5 @@
-import { Permission } from "../../permissions/entities/permission.entity";
-import { User } from "../../users/entities/user.entity";
+import type { User } from '../../users/entities/user.entity';
+import { Permission } from '../../permissions/entities/permission.entity';
 export declare class Role {
     id: number;
     nom: string;

@@ -35,6 +35,9 @@ importers:
       '@nestjs/typeorm':
         specifier: ^11.0.1
         version: 11.0.1(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.24)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@1.0.0(pg@8.21.0)(ts-node@10.9.2(@types/node@24.13.1)(typescript@5.9.3)))
+      '@types/multer':
+        specifier: ^2.1.0
+        version: 2.1.0
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -53,6 +56,9 @@ importers:
       helmet:
         specifier: ^8.2.0
         version: 8.2.0
+      multer:
+        specifier: ^2.1.1
+        version: 2.1.1
       nodemailer:
         specifier: ^8.0.10
         version: 8.0.10
@@ -1049,6 +1055,9 @@ packages:
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
+
+  '@types/multer@2.1.0':
+    resolution: {integrity: sha512-zYZb0+nJhOHtPpGDb3vqPjwpdeGlGC157VpkqNQL+UU2qwoacoQ7MpsAmUptI/0Oa127X32JzWDqQVEXp2RcIA==}
 
   '@types/node@24.13.1':
     resolution: {integrity: sha512-RSpUJGmvsJ1ZeBehQZFhIdpsz+bIpES0nIQXko4Ybq+N+kX6XvOq3Jo+iJ82FWLdblFq85AsMikd3m35jgezYg==}
@@ -5487,6 +5496,10 @@ snapshots:
     optional: true
 
   '@types/ms@2.1.0': {}
+
+  '@types/multer@2.1.0':
+    dependencies:
+      '@types/express': 5.0.6
 
   '@types/node@24.13.1':
     dependencies:

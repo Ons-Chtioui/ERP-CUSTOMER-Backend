@@ -8,6 +8,20 @@ import { Category } from './entities/category.entity';
 import { Supplier } from './entities/supplier.entity';
 import { InventoryItem } from './entities/inventory-item.entity';
 import { CreateComponentDto } from './dto/create-component.dto';
+
+/** Génère un EAN-13 valide à partir d'un préfixe 2xx (usage interne) */
+function generateEAN13(): string {
+  const prefix = '216'; // Préfixe interne TN
+  const body = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10)).join('');
+  const digits = prefix + body;
+  // Calcul du chiffre de contrôle EAN-13
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(digits[i]) * (i % 2 === 0 ? 1 : 3);
+  }
+  const check = (10 - (sum % 10)) % 10;
+  return digits + check;
+}
 @Injectable()
 export class ComponentsService {
 
@@ -65,9 +79,26 @@ async create(dto: CreateComponentDto): Promise<Component> {
     if (dto.supplierId) {
         supplier = await this.suppliersRepo.findOne({ where: { id: dto.supplierId } });
         if (!supplier) throw new NotFoundException(`Fournisseur #${dto.supplierId} introuvable`);
-    }   
+    }
+
+    // Générer un barcode EAN-13 unique si non fourni
+    let barcode = dto.barcode;
+    if (!barcode) {
+      let unique = false;
+      while (!unique) {
+        barcode = generateEAN13();
+        const dup = await this.componentsRepo.findOne({ where: { barcode } });
+        if (!dup) unique = true;
+      }
+    }
+
     return this.componentsRepo.save(
-      this.componentsRepo.create({ ...dto, category: category ?? undefined, supplier: supplier ?? undefined })
+      this.componentsRepo.create({
+        ...dto,
+        barcode,
+        category: category ?? undefined,
+        supplier: supplier ?? undefined,
+      })
     );
 }
 async update(id: number, dto: Partial<CreateComponentDto>): Promise<Component> {
@@ -94,6 +125,11 @@ async update(id: number, dto: Partial<CreateComponentDto>): Promise<Component> {
     const c = await this.findOne(id);
     c.isActive = false;
     return this.componentsRepo.save(c);
+  }
+
+  async updateImageUrl(id: number, imageUrl: string): Promise<Component> {
+    await this.componentsRepo.update(id, { imageUrl });
+    return this.findOne(id);
   }
 async getStockSummary(componentId: number) {
     const component = await this.findOne(componentId);
