@@ -21,7 +21,7 @@ const category_entity_1 = require("./entities/category.entity");
 const supplier_entity_1 = require("./entities/supplier.entity");
 const inventory_item_entity_1 = require("./entities/inventory-item.entity");
 function generateEAN13() {
-    const prefix = '216';
+    const prefix = '619';
     const body = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10)).join('');
     const digits = prefix + body;
     let sum = 0;
@@ -36,6 +36,10 @@ let ComponentsService = class ComponentsService {
     categoriesRepo;
     suppliersRepo;
     inventoryRepo;
+    productsService;
+    setProductsService(svc) {
+        this.productsService = svc;
+    }
     constructor(componentsRepo, categoriesRepo, suppliersRepo, inventoryRepo) {
         this.componentsRepo = componentsRepo;
         this.categoriesRepo = categoriesRepo;
@@ -136,7 +140,11 @@ let ComponentsService = class ComponentsService {
             c.supplier = supplier;
         }
         Object.assign(c, dto);
-        return this.componentsRepo.save(c);
+        const saved = await this.componentsRepo.save(c);
+        if ((dto.prixAchat !== undefined || dto.prixVente !== undefined) && this.productsService) {
+            this.productsService.recalcForComponent(id).catch(() => { });
+        }
+        return saved;
     }
     async deactivate(id) {
         const c = await this.findOne(id);

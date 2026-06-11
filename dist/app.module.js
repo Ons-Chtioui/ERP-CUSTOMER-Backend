@@ -24,6 +24,8 @@ const components_module_1 = require("./components/components.module");
 const stock_movements_module_1 = require("./stock-movements/stock-movements.module");
 const inventory_module_1 = require("./inventory/inventory.module");
 const stock_alerts_module_1 = require("./stock-alerts/stock-alerts.module");
+const products_module_1 = require("./products/products.module");
+const product_categories_module_1 = require("./product-categories/product-categories.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -67,7 +69,7 @@ exports.AppModule = AppModule = __decorate([
                     },
                 }),
             }),
-            auth_module_1.AuthModule, users_module_1.UsersModule, roles_module_1.RolesModule, permissions_module_1.PermissionsModule, warehouses_module_1.WarehousesModule, components_module_1.ComponentsModule, stock_movements_module_1.StockMovementsModule, inventory_module_1.InventoryModule, stock_alerts_module_1.StockAlertsModule
+            auth_module_1.AuthModule, users_module_1.UsersModule, roles_module_1.RolesModule, permissions_module_1.PermissionsModule, warehouses_module_1.WarehousesModule, components_module_1.ComponentsModule, stock_movements_module_1.StockMovementsModule, inventory_module_1.InventoryModule, stock_alerts_module_1.StockAlertsModule, products_module_1.ProductsModule, product_categories_module_1.ProductCategoriesModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

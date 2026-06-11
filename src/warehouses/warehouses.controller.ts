@@ -14,13 +14,18 @@ import { RequirePermissions } from '../common/decorators/require-permissions.dec
 export class WarehousesController {
   constructor(private readonly svc: WarehousesService) {}
 
-  @Get()                   @RequirePermissions('stock.view')
-  findAll()                { return this.svc.findAll(); }
+  @Get()                  
+  @RequirePermissions('stock.view')
+  findAll()                
+  { return this.svc.findAll(); }
 
-  @Get('summary')          @RequirePermissions('stock.view')
-  summary()                { return this.svc.getGlobalSummary(); }
+  @Get('summary')          
+  @RequirePermissions('stock.view')
+  summary() 
+  { return this.svc.getGlobalSummary(); }
 
-  @Get(':id')              @RequirePermissions('stock.view')
+  @Get(':id')           
+  @RequirePermissions('stock.view')
   findOne(@Param('id', ParseIntPipe) id: number) { return this.svc.findOne(id); }
 
   @Get(':id/stock')        @RequirePermissions('stock.view')

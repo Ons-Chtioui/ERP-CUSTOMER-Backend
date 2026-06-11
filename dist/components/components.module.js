@@ -8,22 +8,26 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ComponentsModule = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
 const components_service_1 = require("./components.service");
 const components_controller_1 = require("./components.controller");
-const typeorm_1 = require("@nestjs/typeorm");
 const component_entity_1 = require("./entities/component.entity");
 const inventory_item_entity_1 = require("./entities/inventory-item.entity");
 const category_entity_1 = require("./entities/category.entity");
 const supplier_entity_1 = require("./entities/supplier.entity");
+const products_module_1 = require("../products/products.module");
 let ComponentsModule = class ComponentsModule {
 };
 exports.ComponentsModule = ComponentsModule;
 exports.ComponentsModule = ComponentsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([component_entity_1.Component, category_entity_1.Category, supplier_entity_1.Supplier, inventory_item_entity_1.InventoryItem])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([component_entity_1.Component, category_entity_1.Category, supplier_entity_1.Supplier, inventory_item_entity_1.InventoryItem]),
+            (0, common_1.forwardRef)(() => products_module_1.ProductsModule),
+        ],
         providers: [components_service_1.ComponentsService],
         controllers: [components_controller_1.ComponentsController],
-        exports: [components_service_1.ComponentsService, typeorm_1.TypeOrmModule]
+        exports: [components_service_1.ComponentsService, typeorm_1.TypeOrmModule],
     })
 ], ComponentsModule);
 //# sourceMappingURL=components.module.js.map

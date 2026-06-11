@@ -4,11 +4,14 @@ import { Category } from './entities/category.entity';
 import { Supplier } from './entities/supplier.entity';
 import { InventoryItem } from './entities/inventory-item.entity';
 import { CreateComponentDto } from './dto/create-component.dto';
+import type { ProductsService } from '../products/products.service';
 export declare class ComponentsService {
     private readonly componentsRepo;
     private readonly categoriesRepo;
     private readonly suppliersRepo;
     private readonly inventoryRepo;
+    private productsService?;
+    setProductsService(svc: ProductsService): void;
     constructor(componentsRepo: Repository<Component>, categoriesRepo: Repository<Category>, suppliersRepo: Repository<Supplier>, inventoryRepo: Repository<InventoryItem>);
     findAll(filter: {
         search?: string;

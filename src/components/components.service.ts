@@ -1,17 +1,18 @@
 import {
-  Injectable, NotFoundException, ConflictException,
+  Injectable, NotFoundException, ConflictException, Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Component } from './entities/component.entity';
 import { Category } from './entities/category.entity';
 import { Supplier } from './entities/supplier.entity';
 import { InventoryItem } from './entities/inventory-item.entity';
 import { CreateComponentDto } from './dto/create-component.dto';
+import type { ProductsService } from '../products/products.service';
 
 /** Génère un EAN-13 valide à partir d'un préfixe 2xx (usage interne) */
 function generateEAN13(): string {
-  const prefix = '216'; // Préfixe interne TN
+  const prefix = '619'; // Préfixe interne TN
   const body = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10)).join('');
   const digits = prefix + body;
   // Calcul du chiffre de contrôle EAN-13
@@ -24,6 +25,12 @@ function generateEAN13(): string {
 }
 @Injectable()
 export class ComponentsService {
+  /** Injecté via setProductsService() pour éviter la dépendance circulaire */
+  private productsService?: ProductsService;
+
+  setProductsService(svc: ProductsService) {
+    this.productsService = svc;
+  }
 
     constructor(
         @InjectRepository(Component)
@@ -127,7 +134,14 @@ async update(id: number, dto: Partial<CreateComponentDto>): Promise<Component> {
       c.supplier = supplier;
     }
     Object.assign(c, dto);
-    return this.componentsRepo.save(c);
+    const saved = await this.componentsRepo.save(c);
+
+    // Si prixAchat OU prixVente a changé → recalculer coût/prix de TOUS les produits liés
+    if ((dto.prixAchat !== undefined || dto.prixVente !== undefined) && this.productsService) {
+      this.productsService.recalcForComponent(id).catch(() => {});
+    }
+
+    return saved;
   }
 
   async deactivate(id: number): Promise<Component> {
