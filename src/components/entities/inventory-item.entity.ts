@@ -19,11 +19,12 @@ export class InventoryItem {
     @JoinColumn({ name: 'component_id' })
     component!: Component;
 
-  @Column({ type: 'decimal', precision: 12, scale: 4, default: 0 })
+  @Column({ type: 'int', default: 0 })
     quantity!: number;
 
-  @Column({ name: 'reserved_qty', type: 'decimal', precision: 12, scale: 4, default: 0 })
+  @Column({ name: 'reserved_qty', type: 'int', default: 0 })
     reservedQty!: number;
+
 
   @UpdateDateColumn({ name: 'updated_at' })
     updatedAt!: Date;

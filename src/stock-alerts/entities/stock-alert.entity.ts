@@ -23,8 +23,9 @@ export class StockAlert {
     @JoinColumn({ name: 'component_id' })
     component!: Component;
 
-  @Column({ name: 'quantity_at_alert', type: 'decimal', precision: 12, scale: 4 })
+  @Column({ name: 'quantity_at_alert', type: 'int' })
     quantityAtAlert!: number;
+
 
   @Column()
     threshold!: number;

@@ -24,8 +24,9 @@ export class ProductInventory {
   @JoinColumn({ name: 'warehouse_id' })
   warehouse!: Warehouse;
 
-  @Column({ type: 'decimal', precision: 12, scale: 4, default: 0 })
+  @Column({ type: 'int', default: 0 })
   quantity!: number;
+
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;

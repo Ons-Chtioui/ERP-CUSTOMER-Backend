@@ -24,6 +24,7 @@ export class BomLine {
   component!: Component;
 
   /** Quantité nécessaire pour fabriquer 1 unité du produit */
-  @Column({ type: 'decimal', precision: 12, scale: 4 })
+  @Column({ type: 'int' })
   quantity!: number;
+
 }

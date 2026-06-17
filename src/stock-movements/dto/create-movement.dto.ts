@@ -4,7 +4,8 @@ import { Type } from 'class-transformer';
 export class CreateMovementDto {
   @Type(() => Number) @IsInt()      warehouseId!: number;
   @Type(() => Number) @IsInt()      componentId!: number;
-  @Type(() => Number) @IsPositive() quantity!: number;
+  @Type(() => Number) @IsInt() @IsPositive() quantity!: number;
+
   @IsOptional() @IsString()         referenceDoc?: string;
   @IsOptional() @IsString()         notes?: string;
 }

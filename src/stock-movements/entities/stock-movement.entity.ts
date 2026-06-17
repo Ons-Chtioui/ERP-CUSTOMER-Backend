@@ -33,14 +33,15 @@ export class StockMovement {
   @Column({ type: 'enum', enum: MovementType })
     type!: MovementType;
 
-  @Column({ type: 'decimal', precision: 12, scale: 4 })
+  @Column({ type: 'int' })
     quantity!: number;
 
-  @Column({ name: 'quantity_before', type: 'decimal', precision: 12, scale: 4 })
+  @Column({ name: 'quantity_before', type: 'int' })
     quantityBefore!: number;
 
-  @Column({ name: 'quantity_after', type: 'decimal', precision: 12, scale: 4 })
+  @Column({ name: 'quantity_after', type: 'int' })
     quantityAfter!: number;
+
 
   @Column({ name: 'reference_doc', length: 100, nullable: true })
     referenceDoc!: string;

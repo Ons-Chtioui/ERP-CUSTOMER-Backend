@@ -18,14 +18,15 @@ export class InventoryLine {
     @JoinColumn({ name: 'component_id' })
     component!: Component;
 
-  @Column({ name: 'quantity_theoretical', type: 'decimal', precision: 12, scale: 4 })
+  @Column({ name: 'quantity_theoretical', type: 'int' })
     quantityTheoretical!: number;
 
-  @Column({ name: 'quantity_counted', type: 'decimal', precision: 12, scale: 4, nullable: true })
+  @Column({ name: 'quantity_counted', type: 'int', nullable: true })
     quantityCounted!: number | null;
 
-  @Column({ type: 'decimal', precision: 12, scale: 4, nullable: true })
+  @Column({ type: 'int', nullable: true })
     ecart!: number | null;
+
 
   @Column({ type: 'text', nullable: true })
     notes!: string;
