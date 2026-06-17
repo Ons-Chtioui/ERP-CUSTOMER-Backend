@@ -4,6 +4,7 @@ import { Type } from 'class-transformer';
 export class ProduceDto {
   /** Nombre d'unités à produire */
   @Type(() => Number)
+  @IsInt()
   @IsPositive()
   quantity!: number;
 

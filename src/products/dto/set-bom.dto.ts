@@ -8,6 +8,7 @@ export class BomLineDto {
 
   /** Quantité nécessaire pour fabriquer 1 unité */
   @Type(() => Number)
+  @IsInt()
   @IsPositive()
   quantity!: number;
 }

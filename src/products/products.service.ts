@@ -206,6 +206,20 @@ export class ProductsService {
         prixVenteAuto: venteComponents + coutMO,
       });
 
+      // Propager aux variantes qui n'ont pas de BOM propre
+      const variants = await manager.find(Product, {
+        where: { parent: { id: productId }, isActive: true },
+        relations: { bomLines: true },
+      });
+      for (const v of variants) {
+        if (v.bomLines.length === 0) {
+          await manager.update(Product, v.id, {
+            coutRevient:   coutComponents + Number(v.coutMO),
+            prixVenteAuto: venteComponents + Number(v.coutMO),
+          });
+        }
+      }
+
       return manager.find(BomLine, {
         where: { product: { id: productId } },
         relations: { component: true },
@@ -217,6 +231,8 @@ export class ProductsService {
    * Modifie une seule ligne BOM (ajout ou mise à jour).
    */
   async upsertBomLine(productId: number, componentId: number, quantity: number): Promise<BomLine> {
+    if (!Number.isInteger(quantity) || quantity <= 0)
+      throw new BadRequestException('La quantité doit être un entier positif');
     await this.findOne(productId);
     const component = await this.componentsRepo.findOne({ where: { id: componentId } });
     if (!component) throw new NotFoundException(`Composant #${componentId} introuvable`);
@@ -266,17 +282,40 @@ export class ProductsService {
   async recalcCoutRevient(productId: number): Promise<void> {
     const product = await this.productsRepo.findOne({
       where: { id: productId },
-      relations: { bomLines: { component: true } },
+      relations: { bomLines: { component: true }, parent: true },
     });
     if (!product) return;
 
     const coutMO = Number(product.coutMO);
 
-    const coutComponents   = product.bomLines.reduce(
+    // Si le produit est une variante sans BOM propre → hériter du parent
+    if (product.bomLines.length === 0 && product.parent) {
+      const parent = await this.productsRepo.findOne({
+        where: { id: product.parent.id },
+        relations: { bomLines: { component: true } },
+      });
+      if (parent && parent.bomLines.length > 0) {
+        const coutParent = parent.bomLines.reduce(
+          (sum, line) => sum + Number(line.quantity) * Number(line.component.prixAchat),
+          0,
+        );
+        const venteParent = parent.bomLines.reduce(
+          (sum, line) => sum + Number(line.quantity) * Number(line.component.prixVente),
+          0,
+        );
+        await this.productsRepo.update(productId, {
+          coutRevient:   coutParent + coutMO,
+          prixVenteAuto: venteParent + coutMO,
+        });
+        return;
+      }
+    }
+
+    const coutComponents  = product.bomLines.reduce(
       (sum, line) => sum + Number(line.quantity) * Number(line.component.prixAchat),
       0,
     );
-    const venteComponents  = product.bomLines.reduce(
+    const venteComponents = product.bomLines.reduce(
       (sum, line) => sum + Number(line.quantity) * Number(line.component.prixVente),
       0,
     );
@@ -386,6 +425,8 @@ export class ProductsService {
    * Retourne les composants manquants si insuffisant.
    */
   async simulate(productId: number, quantity: number, warehouseId: number) {
+    if (!Number.isInteger(quantity) || quantity <= 0)
+      throw new BadRequestException('La quantité doit être un entier positif');
     const product = await this.findOne(productId);
     const bom = await this.getBom(productId);
     if (bom.length === 0) throw new BadRequestException('Ce produit n\'a pas de nomenclature (BOM)');
@@ -544,6 +585,8 @@ export class ProductsService {
     quantity: number,
     userId: number,
   ): Promise<void> {
+    if (!Number.isInteger(quantity) || quantity <= 0)
+      throw new BadRequestException('La quantité doit être un entier positif');
     if (fromWarehouseId === toWarehouseId)
       throw new BadRequestException('Source et destination identiques');
 

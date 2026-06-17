@@ -30,7 +30,7 @@ export class ProductionLog {
   user!: User;
 
   /** Nombre d'unités produites */
-  @Column({ type: 'decimal', precision: 12, scale: 4 })
+  @Column({ type: 'int' })
   quantity!: number;
 
   /**
