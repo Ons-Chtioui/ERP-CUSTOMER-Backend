@@ -58,15 +58,26 @@ const ALL_PERMISSIONS = [
     { nom: 'stock.transfer', module: 'Stock', action: 'Transfert entrepôt' },
     { nom: 'stock.alert', module: 'Stock', action: 'Gérer alertes' },
     { nom: 'stock.inventory', module: 'Stock', action: 'Gérer inventaire' },
+    { nom: 'components.view', module: 'Composants', action: 'Consulter' },
+    { nom: 'components.create', module: 'Composants', action: 'Créer' },
+    { nom: 'components.edit', module: 'Composants', action: 'Modifier' },
+    { nom: 'components.delete', module: 'Composants', action: 'Supprimer' },
     { nom: 'bom.view', module: 'BOM', action: 'Consulter' },
     { nom: 'bom.create', module: 'BOM', action: 'Créer nomenclature' },
     { nom: 'bom.edit', module: 'BOM', action: 'Modifier' },
     { nom: 'bom.delete', module: 'BOM', action: 'Supprimer' },
     { nom: 'bom.produce', module: 'BOM', action: 'Lancer production' },
-    { nom: 'orders.view', module: 'Commandes', action: 'Consulter' },
-    { nom: 'orders.create', module: 'Commandes', action: 'Créer' },
-    { nom: 'orders.validate', module: 'Commandes', action: 'Valider' },
-    { nom: 'orders.cancel', module: 'Commandes', action: 'Annuler' },
+    { nom: 'clients.view', module: 'Clients', action: 'Consulter clients' },
+    { nom: 'clients.create', module: 'Clients', action: 'Créer client' },
+    { nom: 'clients.edit', module: 'Clients', action: 'Modifier client' },
+    { nom: 'clients.delete', module: 'Clients', action: 'Supprimer client' },
+    { nom: 'orders.view', module: 'Commandes', action: 'Consulter commandes' },
+    { nom: 'orders.create', module: 'Commandes', action: 'Créer commande' },
+    { nom: 'orders.edit', module: 'Commandes', action: 'Modifier commande (brouillon)' },
+    { nom: 'orders.confirm', module: 'Commandes', action: 'Confirmer commande' },
+    { nom: 'orders.process', module: 'Commandes', action: 'Traiter commande (préparer/expédier/livrer)' },
+    { nom: 'orders.cancel', module: 'Commandes', action: 'Annuler commande' },
+    { nom: 'orders.delete', module: 'Commandes', action: 'Supprimer commande (brouillon)' },
     { nom: 'invoices.view', module: 'Commercial', action: 'Voir factures' },
     { nom: 'invoices.create', module: 'Commercial', action: 'Créer facture' },
     { nom: 'quotes.create', module: 'Commercial', action: 'Créer devis' },
@@ -84,35 +95,60 @@ const ROLES_DEF = [
     {
         nom: 'admin',
         label: 'Admin Société',
-        perms: ALL_NOMS.filter((n) => n !== 'users.delete'),
+        perms: [
+            'users.view', 'users.create', 'users.edit', 'users.roles',
+            'stock.view', 'stock.create', 'stock.edit', 'stock.transfer', 'stock.inventory',
+            'components.view', 'components.create', 'components.edit',
+            'bom.view', 'bom.create', 'bom.edit', 'bom.produce',
+            'clients.view', 'clients.create', 'clients.edit',
+            'orders.view', 'orders.create', 'orders.edit', 'orders.confirm', 'orders.process', 'orders.cancel',
+            'invoices.view', 'invoices.create', 'quotes.create',
+            'reports.view', 'reports.export',
+        ],
     },
     {
         nom: 'resp_stock',
-        label: 'Resp. Stock',
+        label: 'Responsable Stock',
         perms: [
             'stock.view', 'stock.create', 'stock.edit', 'stock.delete',
             'stock.transfer', 'stock.alert', 'stock.inventory',
+            'components.view', 'components.create', 'components.edit',
             'bom.view', 'bom.create', 'bom.edit', 'bom.produce',
+            'clients.view',
+            'orders.view', 'orders.process',
         ],
     },
     {
         nom: 'resp_commercial',
-        label: 'Resp. Commercial',
+        label: 'Responsable Commercial',
         perms: [
-            'orders.view', 'orders.create', 'orders.validate', 'orders.cancel',
+            'stock.view',
+            'components.view',
+            'bom.view',
+            'clients.view', 'clients.create', 'clients.edit',
+            'orders.view', 'orders.create', 'orders.confirm', 'orders.cancel',
             'invoices.view', 'invoices.create', 'quotes.create',
-            'bom.view', 'reports.view', 'stock.view',
+            'reports.view',
         ],
     },
     {
         nom: 'comptable',
         label: 'Comptable',
-        perms: ['invoices.view', 'credits.create', 'reports.view', 'reports.export'],
+        perms: [
+            'stock.view',
+            'clients.view', 'orders.view',
+            'invoices.view', 'credits.create',
+            'reports.view', 'reports.export',
+        ],
     },
     {
         nom: 'operateur',
         label: 'Opérateur',
-        perms: ['stock.view', 'stock.inventory', 'orders.view', 'bom.view'],
+        perms: [
+            'stock.view',
+            'bom.view',
+            'clients.view', 'orders.view',
+        ],
     },
 ];
 const PRODUCT_CATEGORIES = [
@@ -129,7 +165,7 @@ async function seed() {
     const productRepo = app.get((0, typeorm_1.getRepositoryToken)(product_entity_1.Product));
     const bomRepo = app.get((0, typeorm_1.getRepositoryToken)(bom_line_entity_1.BomLine));
     const compRepo = app.get((0, typeorm_1.getRepositoryToken)(component_entity_1.Component));
-    console.log('\n🌱 Permissions...');
+    console.log('\n🌱 Création des permissions...');
     const savedPerms = [];
     for (const p of ALL_PERMISSIONS) {
         let perm = await permRepo.findOne({ where: { nom: p.nom } });
@@ -140,14 +176,14 @@ async function seed() {
         savedPerms.push(perm);
     }
     const permMap = Object.fromEntries(savedPerms.map((p) => [p.nom, p]));
-    console.log('\n🌱 Rôles...');
+    console.log('\n🌱 Création des rôles...');
     for (const r of ROLES_DEF) {
         const permsForRole = r.perms.map((n) => permMap[n]).filter(Boolean);
         let role = await roleRepo.findOne({ where: { nom: r.nom }, relations: { permissions: true } });
         if (!role) {
             role = roleRepo.create({ nom: r.nom, label: r.label, permissions: permsForRole });
             await roleRepo.save(role);
-            console.log(`   + ${r.label}`);
+            console.log(`   + ${r.label} (${permsForRole.length} permissions)`);
         }
         else {
             role.permissions = permsForRole;
@@ -155,20 +191,25 @@ async function seed() {
             console.log(`   ↺ ${r.label} (${permsForRole.length} permissions)`);
         }
     }
-    console.log('\n🌱 Super Admin...');
+    console.log('\n🌱 Création du Super Admin...');
     const superRole = await roleRepo.findOne({ where: { nom: 'super_admin' }, relations: { permissions: true } });
     const existing = await userRepo.findOne({ where: { email: 'admin@erp.com' } });
     if (!existing) {
         const hashed = await bcrypt.hash('Admin@1234', 12);
         await userRepo.save(userRepo.create({
-            nom: 'Admin', prenom: 'Super', email: 'admin@erp.com',
-            password: hashed, role: superRole, isActive: true, emailVerifiedAt: new Date(),
+            nom: 'Admin',
+            prenom: 'Super',
+            email: 'admin@erp.com',
+            password: hashed,
+            role: superRole,
+            isActive: true,
+            emailVerifiedAt: new Date(),
         }));
         console.log('   + admin@erp.com créé');
     }
     else {
         await userRepo.update(existing.id, { role: superRole });
-        console.log('   ✓ Super Admin existant mis à jour');
+        console.log('   ✓ Super Admin existant mis à jour avec toutes les permissions');
     }
     console.log('\n🌱 Catégories produits...');
     const catMap = {};
@@ -228,12 +269,12 @@ async function seed() {
         }
     }
     else {
-        console.log('   ⚠ Pas assez de composants pour créer la BOM exemple — exécutez d\'abord des entrées de stock');
+        console.log('   ⚠ Pas assez de composants pour créer la BOM exemple');
     }
     console.log('\n✅ Seed terminé avec succès !');
     console.log('   Email    : admin@erp.com');
     console.log('   Password : Admin@1234');
-    console.log('   ⚠️  Changez ce mot de passe après le premier login !');
+    console.log(`   ${ALL_PERMISSIONS.length} permissions créées`);
     await app.close();
 }
 seed().catch((err) => {

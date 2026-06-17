@@ -84,8 +84,8 @@ let InventoryService = class InventoryService {
             throw new common_1.NotFoundException('Session introuvable');
         if (session.status !== inventory_session_entity_1.SessionStatus.IN_PROGRESS)
             throw new common_1.BadRequestException('Session non active');
-        if (quantityCounted < 0)
-            throw new common_1.BadRequestException('Quantité négative non autorisée');
+        if (!Number.isInteger(quantityCounted) || quantityCounted < 0)
+            throw new common_1.BadRequestException('La quantité doit être un entier positif ou nul');
         const line = await this.linesRepo.findOne({
             where: { session: { id: sessionId }, component: { id: componentId } },
             relations: { component: true },

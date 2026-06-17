@@ -2,24 +2,29 @@ import { NestFactory } from '@nestjs/core';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { AppModule } from '../app.module';
-import { Role }            from '../roles/entities/role.entity';
-import { Permission }      from '../permissions/entities/permission.entity';
-import { User }            from '../users/entities/user.entity';
+import { Role } from '../roles/entities/role.entity';
+import { Permission } from '../permissions/entities/permission.entity';
+import { User } from '../users/entities/user.entity';
 import { ProductCategory } from '../product-categories/entities/product-category.entity';
-import { Product }         from '../products/entities/product.entity';
-import { BomLine }         from '../products/entities/bom-line.entity';
-import { Component }       from '../components/entities/component.entity';
+import { Product } from '../products/entities/product.entity';
+import { BomLine } from '../products/entities/bom-line.entity';
+import { Component } from '../components/entities/component.entity';
 
-// ─── Permissions ──────────────────────────────────────────────────────────────
+// ─── PERMISSIONS COMPLÈTES ──────────────────────────────────────────────────
 const ALL_PERMISSIONS = [
-  // Utilisateurs
+  // ============================================
+  // MODULE 1 : UTILISATEURS
+  // ============================================
   { nom: 'users.view',        module: 'Utilisateurs', action: 'Consulter' },
   { nom: 'users.create',      module: 'Utilisateurs', action: 'Créer compte' },
   { nom: 'users.edit',        module: 'Utilisateurs', action: 'Modifier' },
   { nom: 'users.delete',      module: 'Utilisateurs', action: 'Supprimer' },
   { nom: 'users.roles',       module: 'Utilisateurs', action: 'Gérer rôles' },
   { nom: 'users.permissions', module: 'Utilisateurs', action: 'Gérer permissions' },
-  // Stock
+
+  // ============================================
+  // MODULE 2 : STOCK
+  // ============================================
   { nom: 'stock.view',        module: 'Stock', action: 'Consulter' },
   { nom: 'stock.create',      module: 'Stock', action: 'Créer entrée' },
   { nom: 'stock.edit',        module: 'Stock', action: 'Modifier' },
@@ -27,67 +32,149 @@ const ALL_PERMISSIONS = [
   { nom: 'stock.transfer',    module: 'Stock', action: 'Transfert entrepôt' },
   { nom: 'stock.alert',       module: 'Stock', action: 'Gérer alertes' },
   { nom: 'stock.inventory',   module: 'Stock', action: 'Gérer inventaire' },
-  // BOM / Produits
+
+  // ============================================
+  // MODULE 3 : COMPOSANTS
+  // ============================================
+  { nom: 'components.view',   module: 'Composants', action: 'Consulter' },
+  { nom: 'components.create', module: 'Composants', action: 'Créer' },
+  { nom: 'components.edit',   module: 'Composants', action: 'Modifier' },
+  { nom: 'components.delete', module: 'Composants', action: 'Supprimer' },
+
+  // ============================================
+  // MODULE 4 : BOM / PRODUITS
+  // ============================================
   { nom: 'bom.view',          module: 'BOM', action: 'Consulter' },
   { nom: 'bom.create',        module: 'BOM', action: 'Créer nomenclature' },
   { nom: 'bom.edit',          module: 'BOM', action: 'Modifier' },
   { nom: 'bom.delete',        module: 'BOM', action: 'Supprimer' },
   { nom: 'bom.produce',       module: 'BOM', action: 'Lancer production' },
-  // Commandes
-  { nom: 'orders.view',       module: 'Commandes', action: 'Consulter' },
-  { nom: 'orders.create',     module: 'Commandes', action: 'Créer' },
-  { nom: 'orders.validate',   module: 'Commandes', action: 'Valider' },
-  { nom: 'orders.cancel',     module: 'Commandes', action: 'Annuler' },
-  // Commercial
+
+  // ============================================
+  // MODULE 5 : CLIENTS
+  // ============================================
+  { nom: 'clients.view',      module: 'Clients', action: 'Consulter clients' },
+  { nom: 'clients.create',    module: 'Clients', action: 'Créer client' },
+  { nom: 'clients.edit',      module: 'Clients', action: 'Modifier client' },
+  { nom: 'clients.delete',    module: 'Clients', action: 'Supprimer client' },
+
+  // ============================================
+  // MODULE 5 : ORDERS
+  // ============================================
+  { nom: 'orders.view',       module: 'Commandes', action: 'Consulter commandes' },
+  { nom: 'orders.create',     module: 'Commandes', action: 'Créer commande' },
+  { nom: 'orders.edit',       module: 'Commandes', action: 'Modifier commande (brouillon)' },
+  { nom: 'orders.confirm',    module: 'Commandes', action: 'Confirmer commande' },
+  { nom: 'orders.process',    module: 'Commandes', action: 'Traiter commande (préparer/expédier/livrer)' },
+  { nom: 'orders.cancel',     module: 'Commandes', action: 'Annuler commande' },
+  { nom: 'orders.delete',     module: 'Commandes', action: 'Supprimer commande (brouillon)' },
+
+  // ============================================
+  // MODULE 6 : COMMERCIAL
+  // ============================================
   { nom: 'invoices.view',     module: 'Commercial', action: 'Voir factures' },
   { nom: 'invoices.create',   module: 'Commercial', action: 'Créer facture' },
   { nom: 'quotes.create',     module: 'Commercial', action: 'Créer devis' },
   { nom: 'credits.create',    module: 'Commercial', action: 'Émettre avoir' },
-  // Rapports
+
+  // ============================================
+  // MODULE 7 : RAPPORTS
+  // ============================================
   { nom: 'reports.view',      module: 'Rapports', action: 'Consulter' },
   { nom: 'reports.export',    module: 'Rapports', action: 'Exporter' },
 ];
 
 const ALL_NOMS = ALL_PERMISSIONS.map((p) => p.nom);
 
+// ─── RÔLES AVEC TOUTES LES PERMISSIONS ──────────────────────────────────────
 const ROLES_DEF = [
   {
     nom: 'super_admin',
     label: 'Super Admin',
-    perms: ALL_NOMS,
+    perms: ALL_NOMS, // Toutes les permissions
   },
   {
     nom: 'admin',
     label: 'Admin Société',
-    perms: ALL_NOMS.filter((n) => n !== 'users.delete'),
+    perms: [
+      // Module 1
+      'users.view', 'users.create', 'users.edit', 'users.roles',
+      // Module 2
+      'stock.view', 'stock.create', 'stock.edit', 'stock.transfer', 'stock.inventory',
+      // Module 3
+      'components.view', 'components.create', 'components.edit',
+      // Module 4
+      'bom.view', 'bom.create', 'bom.edit', 'bom.produce',
+      // Module 5 - Clients
+      'clients.view', 'clients.create', 'clients.edit',
+      // Module 5 - Orders
+      'orders.view', 'orders.create', 'orders.edit', 'orders.confirm', 'orders.process', 'orders.cancel',
+      // Module 6
+      'invoices.view', 'invoices.create', 'quotes.create',
+      // Module 7
+      'reports.view', 'reports.export',
+    ],
   },
   {
     nom: 'resp_stock',
-    label: 'Resp. Stock',
+    label: 'Responsable Stock',
     perms: [
+      // Module 2
       'stock.view', 'stock.create', 'stock.edit', 'stock.delete',
       'stock.transfer', 'stock.alert', 'stock.inventory',
+      // Module 3
+      'components.view', 'components.create', 'components.edit',
+      // Module 4
       'bom.view', 'bom.create', 'bom.edit', 'bom.produce',
+      // Module 5
+      'clients.view',
+      'orders.view', 'orders.process',
     ],
   },
   {
     nom: 'resp_commercial',
-    label: 'Resp. Commercial',
+    label: 'Responsable Commercial',
     perms: [
-      'orders.view', 'orders.create', 'orders.validate', 'orders.cancel',
+      // Module 2
+      'stock.view',
+      // Module 3
+      'components.view',
+      // Module 4
+      'bom.view',
+      // Module 5
+      'clients.view', 'clients.create', 'clients.edit',
+      'orders.view', 'orders.create', 'orders.confirm', 'orders.cancel',
+      // Module 6
       'invoices.view', 'invoices.create', 'quotes.create',
-      'bom.view', 'reports.view', 'stock.view',
+      // Module 7
+      'reports.view',
     ],
   },
   {
     nom: 'comptable',
     label: 'Comptable',
-    perms: ['invoices.view', 'credits.create', 'reports.view', 'reports.export'],
+    perms: [
+      // Module 2
+      'stock.view',
+      // Module 5
+      'clients.view', 'orders.view',
+      // Module 6
+      'invoices.view', 'credits.create',
+      // Module 7
+      'reports.view', 'reports.export',
+    ],
   },
   {
     nom: 'operateur',
     label: 'Opérateur',
-    perms: ['stock.view', 'stock.inventory', 'orders.view', 'bom.view'],
+    perms: [
+      // Module 2
+      'stock.view',
+      // Module 4
+      'bom.view',
+      // Module 5
+      'clients.view', 'orders.view',
+    ],
   },
 ];
 
@@ -111,7 +198,7 @@ async function seed() {
   const compRepo    = app.get(getRepositoryToken(Component));
 
   // ── 1. Permissions ────────────────────────────────────────────
-  console.log('\n🌱 Permissions...');
+  console.log('\n🌱 Création des permissions...');
   const savedPerms: Permission[] = [];
   for (const p of ALL_PERMISSIONS) {
     let perm = await permRepo.findOne({ where: { nom: p.nom } });
@@ -124,14 +211,14 @@ async function seed() {
   const permMap = Object.fromEntries(savedPerms.map((p) => [p.nom, p]));
 
   // ── 2. Rôles ──────────────────────────────────────────────────
-  console.log('\n🌱 Rôles...');
+  console.log('\n🌱 Création des rôles...');
   for (const r of ROLES_DEF) {
     const permsForRole = r.perms.map((n) => permMap[n]).filter(Boolean);
     let role = await roleRepo.findOne({ where: { nom: r.nom }, relations: { permissions: true } });
     if (!role) {
       role = roleRepo.create({ nom: r.nom, label: r.label, permissions: permsForRole });
       await roleRepo.save(role);
-      console.log(`   + ${r.label}`);
+      console.log(`   + ${r.label} (${permsForRole.length} permissions)`);
     } else {
       role.permissions = permsForRole;
       await roleRepo.save(role);
@@ -140,19 +227,25 @@ async function seed() {
   }
 
   // ── 3. Super Admin ────────────────────────────────────────────
-  console.log('\n🌱 Super Admin...');
+  console.log('\n🌱 Création du Super Admin...');
   const superRole = await roleRepo.findOne({ where: { nom: 'super_admin' }, relations: { permissions: true } });
   const existing  = await userRepo.findOne({ where: { email: 'admin@erp.com' } });
+
   if (!existing) {
     const hashed = await bcrypt.hash('Admin@1234', 12);
     await userRepo.save(userRepo.create({
-      nom: 'Admin', prenom: 'Super', email: 'admin@erp.com',
-      password: hashed, role: superRole!, isActive: true, emailVerifiedAt: new Date(),
+      nom: 'Admin',
+      prenom: 'Super',
+      email: 'admin@erp.com',
+      password: hashed,
+      role: superRole!,
+      isActive: true,
+      emailVerifiedAt: new Date(),
     }));
     console.log('   + admin@erp.com créé');
   } else {
     await userRepo.update(existing.id, { role: superRole! });
-    console.log('   ✓ Super Admin existant mis à jour');
+    console.log('   ✓ Super Admin existant mis à jour avec toutes les permissions');
   }
 
   // ── 4. Catégories produits ─────────────────────────────────────
@@ -167,12 +260,11 @@ async function seed() {
     catMap[c.nom] = cat;
   }
 
-  // ── 5. Produits exemples (si composants existent) ─────────────
+  // ── 5. Produits exemples ─────────────────────────────────────
   console.log('\n🌱 Produits exemples...');
   const components = await compRepo.find({ take: 5 });
 
   if (components.length >= 3) {
-    // Produit principal : Chaise de bureau
     let chaise = await productRepo.findOne({ where: { reference: 'CHAISE-001' } });
     if (!chaise) {
       chaise = await productRepo.save(productRepo.create({
@@ -188,7 +280,6 @@ async function seed() {
       console.log('   + Chaise de bureau (CHAISE-001)');
     }
 
-    // Variante : Chaise rouge
     let chaiseRouge = await productRepo.findOne({ where: { reference: 'CHAISE-001-R' } });
     if (!chaiseRouge) {
       chaiseRouge = await productRepo.save(productRepo.create({
@@ -203,7 +294,6 @@ async function seed() {
       console.log('   + Chaise de bureau - Rouge (CHAISE-001-R)');
     }
 
-    // BOM pour la chaise principale (si pas encore créée)
     const existingBom = await bomRepo.find({ where: { product: { id: chaise.id } } });
     if (existingBom.length === 0) {
       const bomLines = [
@@ -216,20 +306,19 @@ async function seed() {
       }
       console.log(`   + BOM Chaise (${bomLines.length} composants)`);
 
-      // Recalculer le coût de revient
       const bom = await bomRepo.find({ where: { product: { id: chaise.id } }, relations: { component: true } });
       const cout = bom.reduce((s: number, l: BomLine) => s + Number(l.quantity) * Number(l.component.prixAchat), 0);
       await productRepo.update(chaise.id, { coutRevient: cout + Number(chaise.coutMO) });
       console.log(`   ✓ Coût de revient recalculé : ${(cout + Number(chaise.coutMO)).toFixed(3)} DTN`);
     }
   } else {
-    console.log('   ⚠ Pas assez de composants pour créer la BOM exemple — exécutez d\'abord des entrées de stock');
+    console.log('   ⚠ Pas assez de composants pour créer la BOM exemple');
   }
 
   console.log('\n✅ Seed terminé avec succès !');
   console.log('   Email    : admin@erp.com');
   console.log('   Password : Admin@1234');
-  console.log('   ⚠️  Changez ce mot de passe après le premier login !');
+  console.log(`   ${ALL_PERMISSIONS.length} permissions créées`);
 
   await app.close();
 }

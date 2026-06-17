@@ -24,12 +24,15 @@ export class ProductsController {
     @Query('search')     search?: string,
     @Query('categoryId') categoryId?: string,
     @Query('parentId')   parentId?: string,
+    @Query('withStock')  withStock?: string,
   ) {
-    return this.svc.findAll({
+    const filter = {
       search,
       categoryId: categoryId ? +categoryId : undefined,
       parentId:   parentId   ? +parentId   : undefined,
-    });
+    };
+    if (withStock === 'true') return this.svc.findAllWithStock(filter);
+    return this.svc.findAll(filter);
   }
 
   @Get(':id')
@@ -93,6 +96,16 @@ export class ProductsController {
     @Param('id', ParseIntPipe) id: number,
     @Query('warehouseId') warehouseId?: string,
   ) { return this.svc.getAvailability(id, warehouseId ? +warehouseId : undefined); }
+
+  /** Prévisualisation stock commande (stock fini + assemblage) */
+  @Get(':id/fulfillment-preview')
+  @RequirePermissions('orders.view')
+  getFulfillmentPreview(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('quantity') quantity: string,
+  ) {
+    return this.svc.getFulfillmentPreview(id, +quantity);
+  }
 
   /** Simule une production sans toucher au stock */
   @Post(':id/simulate')

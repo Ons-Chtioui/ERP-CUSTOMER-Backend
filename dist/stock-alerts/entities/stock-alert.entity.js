@@ -44,7 +44,7 @@ __decorate([
     __metadata("design:type", component_entity_1.Component)
 ], StockAlert.prototype, "component", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'quantity_at_alert', type: 'decimal', precision: 12, scale: 4 }),
+    (0, typeorm_1.Column)({ name: 'quantity_at_alert', type: 'int' }),
     __metadata("design:type", Number)
 ], StockAlert.prototype, "quantityAtAlert", void 0);
 __decorate([

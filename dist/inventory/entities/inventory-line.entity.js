@@ -39,15 +39,15 @@ __decorate([
     __metadata("design:type", component_entity_1.Component)
 ], InventoryLine.prototype, "component", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'quantity_theoretical', type: 'decimal', precision: 12, scale: 4 }),
+    (0, typeorm_1.Column)({ name: 'quantity_theoretical', type: 'int' }),
     __metadata("design:type", Number)
 ], InventoryLine.prototype, "quantityTheoretical", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'quantity_counted', type: 'decimal', precision: 12, scale: 4, nullable: true }),
+    (0, typeorm_1.Column)({ name: 'quantity_counted', type: 'int', nullable: true }),
     __metadata("design:type", Object)
 ], InventoryLine.prototype, "quantityCounted", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 12, scale: 4, nullable: true }),
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
     __metadata("design:type", Object)
 ], InventoryLine.prototype, "ecart", void 0);
 __decorate([

@@ -5,7 +5,7 @@ import { ProduceDto } from './dto/produce.dto';
 export declare class ProductsController {
     private readonly svc;
     constructor(svc: ProductsService);
-    findAll(search?: string, categoryId?: string, parentId?: string): Promise<import("./entities/product.entity").Product[]>;
+    findAll(search?: string, categoryId?: string, parentId?: string, withStock?: string): Promise<import("./entities/product.entity").Product[]>;
     findOne(id: number): Promise<import("./entities/product.entity").Product>;
     create(dto: CreateProductDto): Promise<import("./entities/product.entity").Product>;
     update(id: number, dto: Partial<CreateProductDto>): Promise<import("./entities/product.entity").Product>;
@@ -30,6 +30,19 @@ export declare class ProductsController {
             fabricable: number;
             isGoulot: boolean;
         }[];
+    }>;
+    getFulfillmentPreview(id: number, quantity: string): Promise<{
+        productId: number;
+        productName: string;
+        quantity: number;
+        stockFini: number;
+        stockFabricable: number;
+        stockTotal: number;
+        fromStock: number;
+        fromAssembly: number;
+        canFulfill: boolean;
+        missing: number;
+        source: string;
     }>;
     simulate(id: number, body: {
         quantity: number;

@@ -46,7 +46,7 @@ __decorate([
     __metadata("design:type", user_entity_1.User)
 ], ProductionLog.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 12, scale: 4 }),
+    (0, typeorm_1.Column)({ type: 'int' }),
     __metadata("design:type", Number)
 ], ProductionLog.prototype, "quantity", void 0);
 __decorate([

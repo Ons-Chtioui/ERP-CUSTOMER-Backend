@@ -417,6 +417,67 @@ export class ProductsService {
   }
 
   // ──────────────────────────────────────────────────────────────
+  // STOCK COMMANDE (produit fini + fabricable)
+  // ──────────────────────────────────────────────────────────────
+
+  async getFinishedStockTotal(productId: number): Promise<number> {
+    const raw = await this.productInventoryRepo
+      .createQueryBuilder('pi')
+      .select('COALESCE(SUM(pi.quantity), 0)', 'total')
+      .where('pi.product_id = :productId', { productId })
+      .getRawOne() as { total: string } | null;
+    return Number(raw?.total ?? 0);
+  }
+
+  async getOrderStockSummary(productId: number) {
+    await this.findOne(productId);
+    const stockFini = await this.getFinishedStockTotal(productId);
+    const { stockDisponible, goulot } = await this.getAvailability(productId);
+    return {
+      stockFini,
+      stockFabricable: stockDisponible,
+      stockTotal: stockFini + stockDisponible,
+      goulot,
+    };
+  }
+
+  async getFulfillmentPreview(productId: number, quantity: number) {
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new BadRequestException('La quantité doit être un entier positif');
+    }
+    const product = await this.findOne(productId);
+    const stock = await this.getOrderStockSummary(productId);
+    const fromStock    = Math.min(quantity, stock.stockFini);
+    const fromAssembly = Math.min(quantity - fromStock, stock.stockFabricable);
+    const canFulfill   = fromStock + fromAssembly >= quantity;
+
+    return {
+      productId,
+      productName: product.nom,
+      quantity,
+      stockFini: stock.stockFini,
+      stockFabricable: stock.stockFabricable,
+      stockTotal: stock.stockTotal,
+      fromStock,
+      fromAssembly,
+      canFulfill,
+      missing: canFulfill ? 0 : quantity - (fromStock + fromAssembly),
+      source:
+        fromAssembly === 0 ? 'stock'
+        : fromStock === 0 ? 'assembly'
+        : 'mixed',
+    };
+  }
+
+  async findAllWithStock(filter?: { categoryId?: number; parentId?: number; search?: string }) {
+    const products = await this.findAll(filter);
+    return Promise.all(products.map(async (p) => {
+      const stock = await this.getOrderStockSummary(p.id);
+      return { ...p, stock };
+    }));
+  }
+
+  // ──────────────────────────────────────────────────────────────
   // SIMULATION DE PRODUCTION
   // ──────────────────────────────────────────────────────────────
 

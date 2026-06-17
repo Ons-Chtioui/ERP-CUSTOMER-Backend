@@ -61,15 +61,15 @@ __decorate([
     __metadata("design:type", String)
 ], StockMovement.prototype, "type", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 12, scale: 4 }),
+    (0, typeorm_1.Column)({ type: 'int' }),
     __metadata("design:type", Number)
 ], StockMovement.prototype, "quantity", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'quantity_before', type: 'decimal', precision: 12, scale: 4 }),
+    (0, typeorm_1.Column)({ name: 'quantity_before', type: 'int' }),
     __metadata("design:type", Number)
 ], StockMovement.prototype, "quantityBefore", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'quantity_after', type: 'decimal', precision: 12, scale: 4 }),
+    (0, typeorm_1.Column)({ name: 'quantity_after', type: 'int' }),
     __metadata("design:type", Number)
 ], StockMovement.prototype, "quantityAfter", void 0);
 __decorate([

@@ -1,0 +1,81 @@
+import { Repository, DataSource } from 'typeorm';
+import { Order } from './entities/order.entity';
+import { OrderLine } from './entities/order-line.entity';
+import { OrderStatusHistory } from './entities/order-status-history.entity';
+import { Product } from '../products/entities/product.entity';
+import { BomLine } from '../products/entities/bom-line.entity';
+import { ProductInventory } from '../products/entities/product-inventory.entity';
+import { InventoryItem } from '../components/entities/inventory-item.entity';
+import { Warehouse } from '../warehouses/entities/warehouse.entity';
+import { ProductsService } from '../products/products.service';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { QueryOrdersDto } from './dto/query-orders.dto';
+export declare class OrdersService {
+    private readonly orderRepo;
+    private readonly lineRepo;
+    private readonly historyRepo;
+    private readonly productRepo;
+    private readonly productInventoryRepo;
+    private readonly bomRepo;
+    private readonly inventoryItemRepo;
+    private readonly warehouseRepo;
+    private readonly dataSource;
+    private readonly productsService;
+    constructor(orderRepo: Repository<Order>, lineRepo: Repository<OrderLine>, historyRepo: Repository<OrderStatusHistory>, productRepo: Repository<Product>, productInventoryRepo: Repository<ProductInventory>, bomRepo: Repository<BomLine>, inventoryItemRepo: Repository<InventoryItem>, warehouseRepo: Repository<Warehouse>, dataSource: DataSource, productsService: ProductsService);
+    private generateReference;
+    private getProductPricing;
+    private getLineFulfillment;
+    private getFinishedStockTotal;
+    private deductFinishedStock;
+    private restoreFinishedStock;
+    private deductComponents;
+    private restoreComponents;
+    create(dto: CreateOrderDto, userId: number): Promise<Order>;
+    private saveLines;
+    private checkStock;
+    private deductStock;
+    private restoreStock;
+    updateStatus(id: number, dto: UpdateOrderStatusDto, userId: number): Promise<Order>;
+    updateLines(id: number, dto: Partial<CreateOrderDto>, userId: number): Promise<Order>;
+    findAll(query: QueryOrdersDto): Promise<{
+        data: Order[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
+    findOne(id: number): Promise<Order>;
+    getStats(): Promise<{
+        stats: {
+            status: string;
+            count: string;
+            total: string;
+        }[];
+        totalOrders: number;
+        totalRevenue: number;
+        avgOrderValue: number;
+    }>;
+    checkAvailability(id: number): Promise<{
+        orderId: number;
+        reference: string;
+        canConfirm: boolean;
+        lines: object[];
+        missing: object[];
+    }>;
+    previewLineFulfillment(productId: number, quantity: number): Promise<{
+        productId: number;
+        productName: string;
+        quantity: number;
+        stockFini: number;
+        stockFabricable: number;
+        stockTotal: number;
+        fromStock: number;
+        fromAssembly: number;
+        canFulfill: boolean;
+        missing: number;
+        source: string;
+    }>;
+    remove(id: number): Promise<void>;
+    private recordHistory;
+}

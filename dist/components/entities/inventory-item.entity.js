@@ -37,11 +37,11 @@ __decorate([
     __metadata("design:type", component_entity_1.Component)
 ], InventoryItem.prototype, "component", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 12, scale: 4, default: 0 }),
+    (0, typeorm_1.Column)({ type: 'int', default: 0 }),
     __metadata("design:type", Number)
 ], InventoryItem.prototype, "quantity", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'reserved_qty', type: 'decimal', precision: 12, scale: 4, default: 0 }),
+    (0, typeorm_1.Column)({ name: 'reserved_qty', type: 'int', default: 0 }),
     __metadata("design:type", Number)
 ], InventoryItem.prototype, "reservedQty", void 0);
 __decorate([

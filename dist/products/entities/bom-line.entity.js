@@ -35,7 +35,7 @@ __decorate([
     __metadata("design:type", component_entity_1.Component)
 ], BomLine.prototype, "component", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 12, scale: 4 }),
+    (0, typeorm_1.Column)({ type: 'int' }),
     __metadata("design:type", Number)
 ], BomLine.prototype, "quantity", void 0);
 exports.BomLine = BomLine = __decorate([

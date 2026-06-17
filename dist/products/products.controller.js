@@ -27,12 +27,15 @@ let ProductsController = class ProductsController {
     constructor(svc) {
         this.svc = svc;
     }
-    findAll(search, categoryId, parentId) {
-        return this.svc.findAll({
+    findAll(search, categoryId, parentId, withStock) {
+        const filter = {
             search,
             categoryId: categoryId ? +categoryId : undefined,
             parentId: parentId ? +parentId : undefined,
-        });
+        };
+        if (withStock === 'true')
+            return this.svc.findAllWithStock(filter);
+        return this.svc.findAll(filter);
     }
     findOne(id) { return this.svc.findOne(id); }
     create(dto) { return this.svc.create(dto); }
@@ -43,6 +46,9 @@ let ProductsController = class ProductsController {
     upsertBomLine(id, componentId, quantity) { return this.svc.upsertBomLine(id, componentId, quantity); }
     deleteBomLine(id, componentId) { return this.svc.deleteBomLine(id, componentId); }
     getAvailability(id, warehouseId) { return this.svc.getAvailability(id, warehouseId ? +warehouseId : undefined); }
+    getFulfillmentPreview(id, quantity) {
+        return this.svc.getFulfillmentPreview(id, +quantity);
+    }
     simulate(id, body) { return this.svc.simulate(id, body.quantity, body.warehouseId); }
     produce(id, dto, user) { return this.svc.produce(id, dto, user.id); }
     getLogs(id) { return this.svc.getProductionLogs(id); }
@@ -58,8 +64,9 @@ __decorate([
     __param(0, (0, common_1.Query)('search')),
     __param(1, (0, common_1.Query)('categoryId')),
     __param(2, (0, common_1.Query)('parentId')),
+    __param(3, (0, common_1.Query)('withStock')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "findAll", null);
 __decorate([
@@ -142,6 +149,15 @@ __decorate([
     __metadata("design:paramtypes", [Number, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "getAvailability", null);
+__decorate([
+    (0, common_1.Get)(':id/fulfillment-preview'),
+    (0, require_permissions_decorator_1.RequirePermissions)('orders.view'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Query)('quantity')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:returntype", void 0)
+], ProductsController.prototype, "getFulfillmentPreview", null);
 __decorate([
     (0, common_1.Post)(':id/simulate'),
     (0, require_permissions_decorator_1.RequirePermissions)('bom.view'),

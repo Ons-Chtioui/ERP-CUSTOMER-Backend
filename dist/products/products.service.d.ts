@@ -53,6 +53,66 @@ export declare class ProductsService {
             isGoulot: boolean;
         }[];
     }>;
+    getFinishedStockTotal(productId: number): Promise<number>;
+    getOrderStockSummary(productId: number): Promise<{
+        stockFini: number;
+        stockFabricable: number;
+        stockTotal: number;
+        goulot: {
+            componentId: number;
+            nom: string;
+            fabricable: number;
+        } | null;
+    }>;
+    getFulfillmentPreview(productId: number, quantity: number): Promise<{
+        productId: number;
+        productName: string;
+        quantity: number;
+        stockFini: number;
+        stockFabricable: number;
+        stockTotal: number;
+        fromStock: number;
+        fromAssembly: number;
+        canFulfill: boolean;
+        missing: number;
+        source: string;
+    }>;
+    findAllWithStock(filter?: {
+        categoryId?: number;
+        parentId?: number;
+        search?: string;
+    }): Promise<{
+        stock: {
+            stockFini: number;
+            stockFabricable: number;
+            stockTotal: number;
+            goulot: {
+                componentId: number;
+                nom: string;
+                fabricable: number;
+            } | null;
+        };
+        id: number;
+        nom: string;
+        reference: string;
+        description: string;
+        unite: string;
+        prixVente: number;
+        prixVenteAuto: number;
+        coutRevient: number;
+        coutMO: number;
+        seuilAlerte: number;
+        imageUrl: string | null;
+        isActive: boolean;
+        parent: Product | null;
+        variants: Product[];
+        category: ProductCategory | null;
+        bomLines: BomLine[];
+        productionLogs: ProductionLog[];
+        inventory: ProductInventory[];
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
     simulate(productId: number, quantity: number, warehouseId: number): Promise<{
         canProduce: boolean;
         quantity: number;

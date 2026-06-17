@@ -175,6 +175,18 @@ let ProductsService = class ProductsService {
                 coutRevient: coutComponents + coutMO,
                 prixVenteAuto: venteComponents + coutMO,
             });
+            const variants = await manager.find(product_entity_1.Product, {
+                where: { parent: { id: productId }, isActive: true },
+                relations: { bomLines: true },
+            });
+            for (const v of variants) {
+                if (v.bomLines.length === 0) {
+                    await manager.update(product_entity_1.Product, v.id, {
+                        coutRevient: coutComponents + Number(v.coutMO),
+                        prixVenteAuto: venteComponents + Number(v.coutMO),
+                    });
+                }
+            }
             return manager.find(bom_line_entity_1.BomLine, {
                 where: { product: { id: productId } },
                 relations: { component: true },
@@ -182,6 +194,8 @@ let ProductsService = class ProductsService {
         });
     }
     async upsertBomLine(productId, componentId, quantity) {
+        if (!Number.isInteger(quantity) || quantity <= 0)
+            throw new common_1.BadRequestException('La quantité doit être un entier positif');
         await this.findOne(productId);
         const component = await this.componentsRepo.findOne({ where: { id: componentId } });
         if (!component)
@@ -213,11 +227,26 @@ let ProductsService = class ProductsService {
     async recalcCoutRevient(productId) {
         const product = await this.productsRepo.findOne({
             where: { id: productId },
-            relations: { bomLines: { component: true } },
+            relations: { bomLines: { component: true }, parent: true },
         });
         if (!product)
             return;
         const coutMO = Number(product.coutMO);
+        if (product.bomLines.length === 0 && product.parent) {
+            const parent = await this.productsRepo.findOne({
+                where: { id: product.parent.id },
+                relations: { bomLines: { component: true } },
+            });
+            if (parent && parent.bomLines.length > 0) {
+                const coutParent = parent.bomLines.reduce((sum, line) => sum + Number(line.quantity) * Number(line.component.prixAchat), 0);
+                const venteParent = parent.bomLines.reduce((sum, line) => sum + Number(line.quantity) * Number(line.component.prixVente), 0);
+                await this.productsRepo.update(productId, {
+                    coutRevient: coutParent + coutMO,
+                    prixVenteAuto: venteParent + coutMO,
+                });
+                return;
+            }
+        }
         const coutComponents = product.bomLines.reduce((sum, line) => sum + Number(line.quantity) * Number(line.component.prixAchat), 0);
         const venteComponents = product.bomLines.reduce((sum, line) => sum + Number(line.quantity) * Number(line.component.prixVente), 0);
         await this.productsRepo.update(productId, {
@@ -281,7 +310,60 @@ let ProductsService = class ProductsService {
             details,
         };
     }
+    async getFinishedStockTotal(productId) {
+        const raw = await this.productInventoryRepo
+            .createQueryBuilder('pi')
+            .select('COALESCE(SUM(pi.quantity), 0)', 'total')
+            .where('pi.product_id = :productId', { productId })
+            .getRawOne();
+        return Number(raw?.total ?? 0);
+    }
+    async getOrderStockSummary(productId) {
+        await this.findOne(productId);
+        const stockFini = await this.getFinishedStockTotal(productId);
+        const { stockDisponible, goulot } = await this.getAvailability(productId);
+        return {
+            stockFini,
+            stockFabricable: stockDisponible,
+            stockTotal: stockFini + stockDisponible,
+            goulot,
+        };
+    }
+    async getFulfillmentPreview(productId, quantity) {
+        if (!Number.isInteger(quantity) || quantity <= 0) {
+            throw new common_1.BadRequestException('La quantité doit être un entier positif');
+        }
+        const product = await this.findOne(productId);
+        const stock = await this.getOrderStockSummary(productId);
+        const fromStock = Math.min(quantity, stock.stockFini);
+        const fromAssembly = Math.min(quantity - fromStock, stock.stockFabricable);
+        const canFulfill = fromStock + fromAssembly >= quantity;
+        return {
+            productId,
+            productName: product.nom,
+            quantity,
+            stockFini: stock.stockFini,
+            stockFabricable: stock.stockFabricable,
+            stockTotal: stock.stockTotal,
+            fromStock,
+            fromAssembly,
+            canFulfill,
+            missing: canFulfill ? 0 : quantity - (fromStock + fromAssembly),
+            source: fromAssembly === 0 ? 'stock'
+                : fromStock === 0 ? 'assembly'
+                    : 'mixed',
+        };
+    }
+    async findAllWithStock(filter) {
+        const products = await this.findAll(filter);
+        return Promise.all(products.map(async (p) => {
+            const stock = await this.getOrderStockSummary(p.id);
+            return { ...p, stock };
+        }));
+    }
     async simulate(productId, quantity, warehouseId) {
+        if (!Number.isInteger(quantity) || quantity <= 0)
+            throw new common_1.BadRequestException('La quantité doit être un entier positif');
         const product = await this.findOne(productId);
         const bom = await this.getBom(productId);
         if (bom.length === 0)
@@ -386,6 +468,8 @@ let ProductsService = class ProductsService {
         });
     }
     async transferProductStock(productId, fromWarehouseId, toWarehouseId, quantity, userId) {
+        if (!Number.isInteger(quantity) || quantity <= 0)
+            throw new common_1.BadRequestException('La quantité doit être un entier positif');
         if (fromWarehouseId === toWarehouseId)
             throw new common_1.BadRequestException('Source et destination identiques');
         await this.dataSource.transaction(async (manager) => {

@@ -19,6 +19,8 @@ import { InventoryModule } from './inventory/inventory.module';
 import { StockAlertsModule } from './stock-alerts/stock-alerts.module';
 import { ProductsModule } from './products/products.module';
 import { ProductCategoriesModule } from './product-categories/product-categories.module';
+import { OrdersModule } from './orders/orders.module';
+import { ClientsModule } from './clients/clients.module';
 
 @Module({
   imports: [
@@ -59,7 +61,7 @@ import { ProductCategoriesModule } from './product-categories/product-categories
       },
     }),
   }),
-  AuthModule, UsersModule, RolesModule, PermissionsModule, WarehousesModule, ComponentsModule, StockMovementsModule, InventoryModule, StockAlertsModule, ProductsModule, ProductCategoriesModule],
+  AuthModule, UsersModule, RolesModule, PermissionsModule, WarehousesModule, ComponentsModule, StockMovementsModule, InventoryModule, StockAlertsModule, ProductsModule, ProductCategoriesModule, OrdersModule, ClientsModule],
   controllers: [AppController],
   providers: [AppService],
 })

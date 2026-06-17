@@ -36,7 +36,7 @@ __decorate([
     __metadata("design:type", warehouse_entity_1.Warehouse)
 ], ProductInventory.prototype, "warehouse", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 12, scale: 4, default: 0 }),
+    (0, typeorm_1.Column)({ type: 'int', default: 0 }),
     __metadata("design:type", Number)
 ], ProductInventory.prototype, "quantity", void 0);
 __decorate([
