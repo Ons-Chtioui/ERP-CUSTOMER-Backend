@@ -1,5 +1,6 @@
 import { Order } from './order.entity';
 import { Product } from '../../products/entities/product.entity';
+import { OrderLineSupplement } from './order-line-supplement.entity';
 export declare class OrderLine {
     id: number;
     orderId: number;
@@ -13,5 +14,6 @@ export declare class OrderLine {
     tvaRate: number;
     discount: number;
     totalHt: number;
+    supplements: OrderLineSupplement[];
     createdAt: Date;
 }

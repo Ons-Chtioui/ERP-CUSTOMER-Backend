@@ -14,11 +14,12 @@ import { ProductsModule }      from '../products/products.module';
 
 import { OrdersService }    from './orders.service';
 import { OrdersController } from './orders.controller';
+import { OrderLineSupplement } from './entities/order-line-supplement.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Order, OrderLine, OrderStatusHistory,
+      Order, OrderLine, OrderStatusHistory,OrderLineSupplement,
       Product, BomLine, ProductInventory, InventoryItem, Warehouse,
     ]),
     ProductsModule,

@@ -20,6 +20,11 @@ export class CreateOrderLineDto {
   @Min(0)
   @Max(100)
   discount?: number;
+   @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateOrderSupplementDto)
+  supplements?: CreateOrderSupplementDto[];
 }
 
 
@@ -43,4 +48,27 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => CreateOrderLineDto)
   lines!: CreateOrderLineDto[];
+}
+export class CreateOrderSupplementDto{
+  @IsInt()
+  @Min(1)
+  componentId!:number;
+@IsNumber()
+  @Min(0.001)
+  quantity!: number;
+
+  @IsNumber()
+  @Min(0)
+  unitPrice!: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  tvaRate?: number; // défaut 19 si absent
+
+  @IsOptional()
+  @IsString()
+  note?: string;
+  
 }

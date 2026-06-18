@@ -1,9 +1,10 @@
 import {
   Column, CreateDateColumn, Entity,
-  JoinColumn, ManyToOne, PrimaryGeneratedColumn,
+  JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Order } from './order.entity';
 import { Product } from '../../products/entities/product.entity';
+import { OrderLineSupplement } from './order-line-supplement.entity';
 
 @Entity('order_lines')
 export class OrderLine {
@@ -46,6 +47,8 @@ export class OrderLine {
 
   @Column({ name: 'total_ht', type: 'numeric', precision: 12, scale: 3 })
   declare totalHt: number;
+@OneToMany(() => OrderLineSupplement, (s) => s.orderLine, { cascade: true, eager: true })
+  declare supplements: OrderLineSupplement[];
 
   @CreateDateColumn({ name: 'created_at' })
   declare createdAt: Date;

@@ -1,6 +1,7 @@
 import { Repository, DataSource } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { OrderLine } from './entities/order-line.entity';
+import { OrderLineSupplement } from './entities/order-line-supplement.entity';
 import { OrderStatusHistory } from './entities/order-status-history.entity';
 import { Product } from '../products/entities/product.entity';
 import { BomLine } from '../products/entities/bom-line.entity';
@@ -14,6 +15,7 @@ import { QueryOrdersDto } from './dto/query-orders.dto';
 export declare class OrdersService {
     private readonly orderRepo;
     private readonly lineRepo;
+    private readonly supplementRepo;
     private readonly historyRepo;
     private readonly productRepo;
     private readonly productInventoryRepo;
@@ -22,7 +24,7 @@ export declare class OrdersService {
     private readonly warehouseRepo;
     private readonly dataSource;
     private readonly productsService;
-    constructor(orderRepo: Repository<Order>, lineRepo: Repository<OrderLine>, historyRepo: Repository<OrderStatusHistory>, productRepo: Repository<Product>, productInventoryRepo: Repository<ProductInventory>, bomRepo: Repository<BomLine>, inventoryItemRepo: Repository<InventoryItem>, warehouseRepo: Repository<Warehouse>, dataSource: DataSource, productsService: ProductsService);
+    constructor(orderRepo: Repository<Order>, lineRepo: Repository<OrderLine>, supplementRepo: Repository<OrderLineSupplement>, historyRepo: Repository<OrderStatusHistory>, productRepo: Repository<Product>, productInventoryRepo: Repository<ProductInventory>, bomRepo: Repository<BomLine>, inventoryItemRepo: Repository<InventoryItem>, warehouseRepo: Repository<Warehouse>, dataSource: DataSource, productsService: ProductsService);
     private generateReference;
     private getProductPricing;
     private getLineFulfillment;

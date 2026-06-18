@@ -18,6 +18,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const order_entity_1 = require("./entities/order.entity");
 const order_line_entity_1 = require("./entities/order-line.entity");
+const order_line_supplement_entity_1 = require("./entities/order-line-supplement.entity");
 const order_status_history_entity_1 = require("./entities/order-status-history.entity");
 const product_entity_1 = require("../products/entities/product.entity");
 const bom_line_entity_1 = require("../products/entities/bom-line.entity");
@@ -37,6 +38,7 @@ const STATUS_TRANSITIONS = {
 let OrdersService = class OrdersService {
     orderRepo;
     lineRepo;
+    supplementRepo;
     historyRepo;
     productRepo;
     productInventoryRepo;
@@ -45,9 +47,10 @@ let OrdersService = class OrdersService {
     warehouseRepo;
     dataSource;
     productsService;
-    constructor(orderRepo, lineRepo, historyRepo, productRepo, productInventoryRepo, bomRepo, inventoryItemRepo, warehouseRepo, dataSource, productsService) {
+    constructor(orderRepo, lineRepo, supplementRepo, historyRepo, productRepo, productInventoryRepo, bomRepo, inventoryItemRepo, warehouseRepo, dataSource, productsService) {
         this.orderRepo = orderRepo;
         this.lineRepo = lineRepo;
+        this.supplementRepo = supplementRepo;
         this.historyRepo = historyRepo;
         this.productRepo = productRepo;
         this.productInventoryRepo = productInventoryRepo;
@@ -228,7 +231,7 @@ let OrdersService = class OrdersService {
             const lineTva = lineHt * (tvaRate / 100);
             totalHt += lineHt;
             totalTva += lineTva;
-            await this.lineRepo.save(this.lineRepo.create({
+            const savedLine = await this.lineRepo.save(this.lineRepo.create({
                 orderId,
                 productId: item.productId,
                 quantity: item.quantity,
@@ -239,6 +242,22 @@ let OrdersService = class OrdersService {
                 qtyFromStock: 0,
                 qtyFromAssembly: 0,
             }));
+            for (const s of item.supplements ?? []) {
+                const rate = s.tvaRate ?? DEFAULT_TVA;
+                const suppHt = round(s.quantity * s.unitPrice);
+                totalHt += suppHt;
+                totalTva += suppHt * (rate / 100);
+                await this.supplementRepo.save(this.supplementRepo.create({
+                    orderLineId: savedLine.id,
+                    componentId: s.componentId,
+                    quantity: s.quantity,
+                    unitPrice: s.unitPrice,
+                    tvaRate: rate,
+                    totalHt: suppHt,
+                    qtyDeducted: 0,
+                    note: s.note ?? null,
+                }));
+            }
         }
         totalHt *= (1 - globalDiscount / 100);
         totalTva *= (1 - globalDiscount / 100);
@@ -258,6 +277,22 @@ let OrdersService = class OrdersService {
                     needed: line.quantity,
                 });
             }
+            for (const supp of line.supplements ?? []) {
+                const raw = await this.inventoryItemRepo
+                    .createQueryBuilder('i')
+                    .select('COALESCE(SUM(i.quantity), 0)', 'total')
+                    .where('i.component_id = :cId', { cId: supp.componentId })
+                    .getRawOne();
+                const available = Number(raw?.total ?? 0);
+                if (available < supp.quantity) {
+                    missing.push({
+                        type: 'supplement',
+                        name: supp.component?.nom ?? `Composant #${supp.componentId}`,
+                        available,
+                        needed: supp.quantity,
+                    });
+                }
+            }
         }
         if (missing.length > 0) {
             throw new common_1.BadRequestException({ message: 'Stock insuffisant', missing });
@@ -274,21 +309,42 @@ let OrdersService = class OrdersService {
                     throw new common_1.BadRequestException(`Stock insuffisant pour ${line.product?.nom}`);
                 }
                 if (fromAssembly > 0) {
-                    const bomCount = await manager.count(bom_line_entity_1.BomLine, { where: { product: { id: line.productId } } });
+                    const bomCount = await manager.count(bom_line_entity_1.BomLine, {
+                        where: { product: { id: line.productId } },
+                    });
                     if (bomCount === 0) {
                         throw new common_1.BadRequestException(`Impossible d'assembler ${line.product?.nom} : nomenclature (BOM) absente`);
                     }
                 }
-                if (fromStock > 0) {
+                if (fromStock > 0)
                     await this.deductFinishedStock(manager, line.productId, fromStock);
-                }
-                if (fromAssembly > 0) {
+                if (fromAssembly > 0)
                     await this.deductComponents(manager, line.productId, fromAssembly, line.product?.nom);
-                }
                 await manager.update(order_line_entity_1.OrderLine, line.id, {
                     qtyFromStock: fromStock,
                     qtyFromAssembly: fromAssembly,
                 });
+                for (const supp of line.supplements ?? []) {
+                    const items = await manager
+                        .createQueryBuilder(inventory_item_entity_1.InventoryItem, 'i')
+                        .where('i.component_id = :cId', { cId: supp.componentId })
+                        .orderBy('i.quantity', 'DESC')
+                        .setLock('pessimistic_write')
+                        .getMany();
+                    let remaining = Number(supp.quantity);
+                    for (const item of items) {
+                        if (remaining <= 0)
+                            break;
+                        const take = Math.min(Number(item.quantity), remaining);
+                        item.quantity = Number(item.quantity) - take;
+                        remaining -= take;
+                        await manager.save(inventory_item_entity_1.InventoryItem, item);
+                    }
+                    if (remaining > 0) {
+                        throw new common_1.BadRequestException(`Stock insuffisant pour le supplément: ${supp.component?.nom ?? supp.componentId}`);
+                    }
+                    await manager.update(order_line_supplement_entity_1.OrderLineSupplement, supp.id, { qtyDeducted: supp.quantity });
+                }
             }
         });
     }
@@ -300,16 +356,44 @@ let OrdersService = class OrdersService {
                 if (fromStock === 0 && fromAssembly === 0) {
                     fromStock = line.quantity;
                 }
-                if (fromStock > 0) {
+                if (fromStock > 0)
                     await this.restoreFinishedStock(manager, line.productId, fromStock);
-                }
-                if (fromAssembly > 0) {
+                if (fromAssembly > 0)
                     await this.restoreComponents(manager, line.productId, fromAssembly);
-                }
                 await manager.update(order_line_entity_1.OrderLine, line.id, {
                     qtyFromStock: 0,
                     qtyFromAssembly: 0,
                 });
+                for (const supp of line.supplements ?? []) {
+                    const qty = Number(supp.qtyDeducted ?? 0);
+                    if (qty <= 0)
+                        continue;
+                    const items = await manager
+                        .createQueryBuilder(inventory_item_entity_1.InventoryItem, 'i')
+                        .where('i.component_id = :cId', { cId: supp.componentId })
+                        .orderBy('i.quantity', 'ASC')
+                        .getMany();
+                    let rem = qty;
+                    for (const item of items) {
+                        if (rem <= 0)
+                            break;
+                        item.quantity = Number(item.quantity) + rem;
+                        rem = 0;
+                        await manager.save(inventory_item_entity_1.InventoryItem, item);
+                    }
+                    if (rem > 0) {
+                        const warehouses = await manager.find(warehouse_entity_1.Warehouse, { take: 1 });
+                        if (warehouses.length > 0) {
+                            await manager.save(inventory_item_entity_1.InventoryItem, manager.create(inventory_item_entity_1.InventoryItem, {
+                                component: { id: supp.componentId },
+                                warehouse: { id: warehouses[0].id },
+                                quantity: rem,
+                                reservedQty: 0,
+                            }));
+                        }
+                    }
+                    await manager.update(order_line_supplement_entity_1.OrderLineSupplement, supp.id, { qtyDeducted: 0 });
+                }
             }
         });
     }
@@ -367,6 +451,8 @@ let OrdersService = class OrdersService {
             .leftJoinAndSelect('o.client', 'client')
             .leftJoinAndSelect('o.lines', 'lines')
             .leftJoinAndSelect('lines.product', 'product')
+            .leftJoinAndSelect('lines.supplements', 'supplements')
+            .leftJoinAndSelect('supplements.component', 'suppComponent')
             .leftJoinAndSelect('o.creator', 'creator')
             .orderBy('o.created_at', 'DESC');
         if (query.status)
@@ -389,7 +475,7 @@ let OrdersService = class OrdersService {
             where: { id },
             relations: {
                 client: true,
-                lines: { product: true },
+                lines: { product: true, supplements: { component: true } },
                 statusHistory: { user: true },
                 creator: true,
             },
@@ -435,11 +521,7 @@ let OrdersService = class OrdersService {
             };
             lines.push(lineInfo);
             if (!canFulfill) {
-                missing.push({
-                    ...lineInfo,
-                    available: fulfillment.stockTotal,
-                    needed: line.quantity,
-                });
+                missing.push({ ...lineInfo, available: fulfillment.stockTotal, needed: line.quantity });
             }
         }
         return {
@@ -475,14 +557,16 @@ exports.OrdersService = OrdersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(order_entity_1.Order)),
     __param(1, (0, typeorm_1.InjectRepository)(order_line_entity_1.OrderLine)),
-    __param(2, (0, typeorm_1.InjectRepository)(order_status_history_entity_1.OrderStatusHistory)),
-    __param(3, (0, typeorm_1.InjectRepository)(product_entity_1.Product)),
-    __param(4, (0, typeorm_1.InjectRepository)(product_inventory_entity_1.ProductInventory)),
-    __param(5, (0, typeorm_1.InjectRepository)(bom_line_entity_1.BomLine)),
-    __param(6, (0, typeorm_1.InjectRepository)(inventory_item_entity_1.InventoryItem)),
-    __param(7, (0, typeorm_1.InjectRepository)(warehouse_entity_1.Warehouse)),
-    __param(8, (0, typeorm_1.InjectDataSource)()),
+    __param(2, (0, typeorm_1.InjectRepository)(order_line_supplement_entity_1.OrderLineSupplement)),
+    __param(3, (0, typeorm_1.InjectRepository)(order_status_history_entity_1.OrderStatusHistory)),
+    __param(4, (0, typeorm_1.InjectRepository)(product_entity_1.Product)),
+    __param(5, (0, typeorm_1.InjectRepository)(product_inventory_entity_1.ProductInventory)),
+    __param(6, (0, typeorm_1.InjectRepository)(bom_line_entity_1.BomLine)),
+    __param(7, (0, typeorm_1.InjectRepository)(inventory_item_entity_1.InventoryItem)),
+    __param(8, (0, typeorm_1.InjectRepository)(warehouse_entity_1.Warehouse)),
+    __param(9, (0, typeorm_1.InjectDataSource)()),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

@@ -13,6 +13,7 @@ exports.OrderLine = void 0;
 const typeorm_1 = require("typeorm");
 const order_entity_1 = require("./order.entity");
 const product_entity_1 = require("../../products/entities/product.entity");
+const order_line_supplement_entity_1 = require("./order-line-supplement.entity");
 let OrderLine = class OrderLine {
 };
 exports.OrderLine = OrderLine;
@@ -66,6 +67,10 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'total_ht', type: 'numeric', precision: 12, scale: 3 }),
     __metadata("design:type", Number)
 ], OrderLine.prototype, "totalHt", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => order_line_supplement_entity_1.OrderLineSupplement, (s) => s.orderLine, { cascade: true, eager: true }),
+    __metadata("design:type", Array)
+], OrderLine.prototype, "supplements", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)
