@@ -20,12 +20,14 @@ const order_entity_1 = require("./entities/order.entity");
 const order_line_entity_1 = require("./entities/order-line.entity");
 const order_line_supplement_entity_1 = require("./entities/order-line-supplement.entity");
 const order_status_history_entity_1 = require("./entities/order-status-history.entity");
+const order_modification_entity_1 = require("./entities/order-modification.entity");
 const product_entity_1 = require("../products/entities/product.entity");
 const bom_line_entity_1 = require("../products/entities/bom-line.entity");
 const product_inventory_entity_1 = require("../products/entities/product-inventory.entity");
 const inventory_item_entity_1 = require("../components/entities/inventory-item.entity");
 const warehouse_entity_1 = require("../warehouses/entities/warehouse.entity");
 const products_service_1 = require("../products/products.service");
+const delivery_notes_service_1 = require("../commercial/delivery-notes/delivery-notes.service");
 const DEFAULT_TVA = 19;
 const STATUS_TRANSITIONS = {
     [order_entity_1.OrderStatus.DRAFT]: [order_entity_1.OrderStatus.CONFIRMED, order_entity_1.OrderStatus.CANCELLED],
@@ -40,6 +42,7 @@ let OrdersService = class OrdersService {
     lineRepo;
     supplementRepo;
     historyRepo;
+    modRepo;
     productRepo;
     productInventoryRepo;
     bomRepo;
@@ -47,11 +50,13 @@ let OrdersService = class OrdersService {
     warehouseRepo;
     dataSource;
     productsService;
-    constructor(orderRepo, lineRepo, supplementRepo, historyRepo, productRepo, productInventoryRepo, bomRepo, inventoryItemRepo, warehouseRepo, dataSource, productsService) {
+    deliveryNotesService;
+    constructor(orderRepo, lineRepo, supplementRepo, historyRepo, modRepo, productRepo, productInventoryRepo, bomRepo, inventoryItemRepo, warehouseRepo, dataSource, productsService, deliveryNotesService) {
         this.orderRepo = orderRepo;
         this.lineRepo = lineRepo;
         this.supplementRepo = supplementRepo;
         this.historyRepo = historyRepo;
+        this.modRepo = modRepo;
         this.productRepo = productRepo;
         this.productInventoryRepo = productInventoryRepo;
         this.bomRepo = bomRepo;
@@ -59,6 +64,7 @@ let OrdersService = class OrdersService {
         this.warehouseRepo = warehouseRepo;
         this.dataSource = dataSource;
         this.productsService = productsService;
+        this.deliveryNotesService = deliveryNotesService;
     }
     async generateReference() {
         const year = new Date().getFullYear();
@@ -437,6 +443,10 @@ let OrdersService = class OrdersService {
         }
         await this.orderRepo.update(id, patch);
         await this.recordHistory(id, fromStatus, dto.status, userId, dto.comment);
+        if (dto.status === order_entity_1.OrderStatus.SHIPPED) {
+            const updated = await this.findOne(id);
+            await this.deliveryNotesService.createFromOrder(updated, userId);
+        }
         return this.findOne(id);
     }
     async updateLines(id, dto, userId) {
@@ -456,6 +466,15 @@ let OrdersService = class OrdersService {
             totalTva: round(totalTva),
             totalTtc: round(totalHt + totalTva),
         });
+        await this.modRepo.save(this.modRepo.create({
+            orderId: id,
+            action: 'lines_updated',
+            details: JSON.stringify({
+                linesCount: lines.length,
+                totalTtc: round(totalHt + totalTva),
+            }),
+            changedBy: userId,
+        }));
         return this.findOne(id);
     }
     async findAll(query) {
@@ -492,6 +511,7 @@ let OrdersService = class OrdersService {
                 warehouse: true,
                 lines: { product: true, supplements: { component: true } },
                 statusHistory: { user: true },
+                modifications: { user: true },
                 creator: true,
             },
         });
@@ -589,12 +609,14 @@ exports.OrdersService = OrdersService = __decorate([
     __param(1, (0, typeorm_1.InjectRepository)(order_line_entity_1.OrderLine)),
     __param(2, (0, typeorm_1.InjectRepository)(order_line_supplement_entity_1.OrderLineSupplement)),
     __param(3, (0, typeorm_1.InjectRepository)(order_status_history_entity_1.OrderStatusHistory)),
-    __param(4, (0, typeorm_1.InjectRepository)(product_entity_1.Product)),
-    __param(5, (0, typeorm_1.InjectRepository)(product_inventory_entity_1.ProductInventory)),
-    __param(6, (0, typeorm_1.InjectRepository)(bom_line_entity_1.BomLine)),
-    __param(7, (0, typeorm_1.InjectRepository)(inventory_item_entity_1.InventoryItem)),
-    __param(8, (0, typeorm_1.InjectRepository)(warehouse_entity_1.Warehouse)),
-    __param(9, (0, typeorm_1.InjectDataSource)()),
+    __param(4, (0, typeorm_1.InjectRepository)(order_modification_entity_1.OrderModification)),
+    __param(5, (0, typeorm_1.InjectRepository)(product_entity_1.Product)),
+    __param(6, (0, typeorm_1.InjectRepository)(product_inventory_entity_1.ProductInventory)),
+    __param(7, (0, typeorm_1.InjectRepository)(bom_line_entity_1.BomLine)),
+    __param(8, (0, typeorm_1.InjectRepository)(inventory_item_entity_1.InventoryItem)),
+    __param(9, (0, typeorm_1.InjectRepository)(warehouse_entity_1.Warehouse)),
+    __param(10, (0, typeorm_1.InjectDataSource)()),
+    __param(12, (0, common_1.Inject)((0, common_1.forwardRef)(() => delivery_notes_service_1.DeliveryNotesService))),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
@@ -604,8 +626,10 @@ exports.OrdersService = OrdersService = __decorate([
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.DataSource,
-        products_service_1.ProductsService])
+        products_service_1.ProductsService,
+        delivery_notes_service_1.DeliveryNotesService])
 ], OrdersService);
 function round(n) {
     return Math.round(n * 1000) / 1000;

@@ -12,12 +12,14 @@ const typeorm_1 = require("@nestjs/typeorm");
 const order_entity_1 = require("./entities/order.entity");
 const order_line_entity_1 = require("./entities/order-line.entity");
 const order_status_history_entity_1 = require("./entities/order-status-history.entity");
+const order_modification_entity_1 = require("./entities/order-modification.entity");
 const product_entity_1 = require("../products/entities/product.entity");
 const bom_line_entity_1 = require("../products/entities/bom-line.entity");
 const product_inventory_entity_1 = require("../products/entities/product-inventory.entity");
 const inventory_item_entity_1 = require("../components/entities/inventory-item.entity");
 const warehouse_entity_1 = require("../warehouses/entities/warehouse.entity");
 const products_module_1 = require("../products/products.module");
+const delivery_notes_module_1 = require("../commercial/delivery-notes/delivery-notes.module");
 const orders_service_1 = require("./orders.service");
 const orders_controller_1 = require("./orders.controller");
 const order_line_supplement_entity_1 = require("./entities/order-line-supplement.entity");
@@ -28,10 +30,11 @@ exports.OrdersModule = OrdersModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([
-                order_entity_1.Order, order_line_entity_1.OrderLine, order_status_history_entity_1.OrderStatusHistory, order_line_supplement_entity_1.OrderLineSupplement,
+                order_entity_1.Order, order_line_entity_1.OrderLine, order_status_history_entity_1.OrderStatusHistory, order_modification_entity_1.OrderModification, order_line_supplement_entity_1.OrderLineSupplement,
                 product_entity_1.Product, bom_line_entity_1.BomLine, product_inventory_entity_1.ProductInventory, inventory_item_entity_1.InventoryItem, warehouse_entity_1.Warehouse,
             ]),
             products_module_1.ProductsModule,
+            (0, common_1.forwardRef)(() => delivery_notes_module_1.DeliveryNotesModule),
         ],
         controllers: [orders_controller_1.OrdersController],
         providers: [orders_service_1.OrdersService],

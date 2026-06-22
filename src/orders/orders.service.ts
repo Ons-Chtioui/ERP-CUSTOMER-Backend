@@ -1,5 +1,5 @@
 import {
-  Injectable, NotFoundException, BadRequestException,
+  Injectable, NotFoundException, BadRequestException, Inject, forwardRef,
 } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager } from 'typeorm';
@@ -7,6 +7,7 @@ import { Order, OrderStatus }        from './entities/order.entity';
 import { OrderLine }                 from './entities/order-line.entity';
 import { OrderLineSupplement }       from './entities/order-line-supplement.entity';
 import { OrderStatusHistory }        from './entities/order-status-history.entity';
+import { OrderModification }         from './entities/order-modification.entity';
 import { Product }                   from '../products/entities/product.entity';
 import { BomLine }                   from '../products/entities/bom-line.entity';
 import { ProductInventory }          from '../products/entities/product-inventory.entity';
@@ -16,6 +17,7 @@ import { ProductsService }           from '../products/products.service';
 import { CreateOrderDto }            from './dto/create-order.dto';
 import { UpdateOrderStatusDto }      from './dto/update-order-status.dto';
 import { QueryOrdersDto }            from './dto/query-orders.dto';
+import { DeliveryNotesService }      from '../commercial/delivery-notes/delivery-notes.service';
 
 const DEFAULT_TVA = 19;
 
@@ -47,6 +49,8 @@ export class OrdersService {
     private readonly supplementRepo: Repository<OrderLineSupplement>,
     @InjectRepository(OrderStatusHistory)
     private readonly historyRepo: Repository<OrderStatusHistory>,
+    @InjectRepository(OrderModification)
+    private readonly modRepo: Repository<OrderModification>,
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
     @InjectRepository(ProductInventory)
@@ -60,6 +64,8 @@ export class OrdersService {
     @InjectDataSource()
     private readonly dataSource: DataSource,
     private readonly productsService: ProductsService,
+    @Inject(forwardRef(() => DeliveryNotesService))
+    private readonly deliveryNotesService: DeliveryNotesService,
   ) {}
 
   // ── Génération référence ──────────────────────────────────────
@@ -563,6 +569,12 @@ export class OrdersService {
 
     await this.orderRepo.update(id, patch);
     await this.recordHistory(id, fromStatus, dto.status, userId, dto.comment);
+
+    if (dto.status === OrderStatus.SHIPPED) {
+      const updated = await this.findOne(id);
+      await this.deliveryNotesService.createFromOrder(updated, userId);
+    }
+
     return this.findOne(id);
   }
 
@@ -586,6 +598,16 @@ export class OrdersService {
       totalTva:    round(totalTva),
       totalTtc:    round(totalHt + totalTva),
     });
+
+    await this.modRepo.save(this.modRepo.create({
+      orderId:   id,
+      action:    'lines_updated',
+      details:   JSON.stringify({
+        linesCount: lines.length,
+        totalTtc:   round(totalHt + totalTva),
+      }),
+      changedBy: userId,
+    }));
 
     return this.findOne(id);
   }
@@ -625,6 +647,7 @@ export class OrdersService {
         warehouse:     true,
         lines:         { product: true, supplements: { component: true } },
         statusHistory: { user: true },
+        modifications: { user: true },
         creator:       true,
       },
     });

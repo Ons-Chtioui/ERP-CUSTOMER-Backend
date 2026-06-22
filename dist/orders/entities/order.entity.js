@@ -16,6 +16,7 @@ const user_entity_1 = require("../../users/entities/user.entity");
 const warehouse_entity_1 = require("../../warehouses/entities/warehouse.entity");
 const order_line_entity_1 = require("./order-line.entity");
 const order_status_history_entity_1 = require("./order-status-history.entity");
+const order_modification_entity_1 = require("./order-modification.entity");
 var OrderStatus;
 (function (OrderStatus) {
     OrderStatus["DRAFT"] = "draft";
@@ -115,6 +116,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => order_status_history_entity_1.OrderStatusHistory, (h) => h.order),
     __metadata("design:type", Array)
 ], Order.prototype, "statusHistory", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => order_modification_entity_1.OrderModification, (m) => m.order),
+    __metadata("design:type", Array)
+], Order.prototype, "modifications", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)

@@ -9,7 +9,8 @@ import { Repository, Like } from 'typeorm';
 import { DeliveryNote, DeliveryStatus } from './entities/delivery-note.entity';
 import { DeliveryNoteLine } from './entities/delivery-note-line.entity';
 import { CreateDeliveryNoteDto } from './dto/create-delivery-note.dto';
-import {DeliverDto} from './dto/deliver.dto';
+import { DeliverDto } from './dto/deliver.dto';
+import { Order } from '../../orders/entities/order.entity';
 
 @Injectable()
 export class DeliveryNotesService {
@@ -53,6 +54,24 @@ export class DeliveryNotesService {
     await this.lineRepo.save(lines);
 
     return this.findOne(dn.id);
+  }
+
+  async createFromOrder(order: Order, userId: number): Promise<DeliveryNote | null> {
+    const existing = await this.repo.findOne({ where: { orderId: order.id } });
+    if (existing) return existing;
+
+    const dto = {
+      clientId:        order.clientId,
+      orderId:         order.id,
+      deliveryAddress: order.client?.address ?? null,
+      note:            `BL auto-généré pour ${order.reference}`,
+      lines: order.lines.map(l => ({
+        productId:         l.productId,
+        quantityOrdered:   l.quantity,
+        quantityDelivered: l.quantity,
+      })),
+    };
+    return this.create(dto as CreateDeliveryNoteDto, userId);
   }
 
   // ── FIND ALL ──────────────────────────────────────────────────

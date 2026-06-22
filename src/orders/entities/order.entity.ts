@@ -8,6 +8,7 @@ import { User }               from '../../users/entities/user.entity';
 import { Warehouse }          from '../../warehouses/entities/warehouse.entity';
 import { OrderLine }          from './order-line.entity';
 import { OrderStatusHistory } from './order-status-history.entity';
+import { OrderModification }  from './order-modification.entity';
 
 export enum OrderStatus {
   DRAFT     = 'draft',
@@ -88,6 +89,9 @@ export class Order {
 
   @OneToMany(() => OrderStatusHistory, (h) => h.order)
   declare statusHistory: OrderStatusHistory[];
+
+  @OneToMany(() => OrderModification, (m) => m.order)
+  declare modifications: OrderModification[];
 
   @CreateDateColumn({ name: 'created_at' })
   declare createdAt: Date;

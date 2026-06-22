@@ -3,6 +3,7 @@ import { User } from '../../users/entities/user.entity';
 import { Warehouse } from '../../warehouses/entities/warehouse.entity';
 import { OrderLine } from './order-line.entity';
 import { OrderStatusHistory } from './order-status-history.entity';
+import { OrderModification } from './order-modification.entity';
 export declare enum OrderStatus {
     DRAFT = "draft",
     CONFIRMED = "confirmed",
@@ -33,6 +34,7 @@ export declare class Order {
     creator: User;
     lines: OrderLine[];
     statusHistory: OrderStatusHistory[];
+    modifications: OrderModification[];
     createdAt: Date;
     updatedAt: Date;
 }

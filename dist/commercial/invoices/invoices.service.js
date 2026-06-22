@@ -20,16 +20,19 @@ const schedule_1 = require("@nestjs/schedule");
 const invoice_entity_1 = require("./entities/invoice.entity");
 const invoice_line_entity_1 = require("./entities/invoice-line.entity");
 const payment_entity_1 = require("./entities/payment.entity");
+const documents_service_1 = require("../../documents/documents.service");
 let InvoicesService = class InvoicesService {
     invoiceRepo;
     lineRepo;
     paymentRepo;
     dataSource;
-    constructor(invoiceRepo, lineRepo, paymentRepo, dataSource) {
+    documentsService;
+    constructor(invoiceRepo, lineRepo, paymentRepo, dataSource, documentsService) {
         this.invoiceRepo = invoiceRepo;
         this.lineRepo = lineRepo;
         this.paymentRepo = paymentRepo;
         this.dataSource = dataSource;
+        this.documentsService = documentsService;
     }
     async generateReference(type) {
         const year = new Date().getFullYear();
@@ -135,6 +138,11 @@ let InvoicesService = class InvoicesService {
         }
         invoice.status = invoice_entity_1.InvoiceStatus.SENT;
         await this.invoiceRepo.save(invoice);
+        try {
+            await this.documentsService.sendInvoiceEmail(id);
+        }
+        catch {
+        }
         return this.findOne(id);
     }
     async addPayment(id, dto, userId) {
@@ -209,6 +217,9 @@ let InvoicesService = class InvoicesService {
             }));
             await manager.save(creditLines);
             return creditNote;
+        }).then(async (creditNote) => {
+            await this.documentsService.restoreStockForCreditNote(creditNote.id);
+            return creditNote;
         });
     }
     async cancel(id) {
@@ -259,9 +270,11 @@ exports.InvoicesService = InvoicesService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(invoice_entity_1.Invoice)),
     __param(1, (0, typeorm_1.InjectRepository)(invoice_line_entity_1.InvoiceLine)),
     __param(2, (0, typeorm_1.InjectRepository)(payment_entity_1.Payment)),
+    __param(4, (0, common_1.Inject)((0, common_1.forwardRef)(() => documents_service_1.DocumentsService))),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
-        typeorm_2.DataSource])
+        typeorm_2.DataSource,
+        documents_service_1.DocumentsService])
 ], InvoicesService);
 //# sourceMappingURL=invoices.service.js.map

@@ -52,6 +52,23 @@ let DeliveryNotesService = class DeliveryNotesService {
         await this.lineRepo.save(lines);
         return this.findOne(dn.id);
     }
+    async createFromOrder(order, userId) {
+        const existing = await this.repo.findOne({ where: { orderId: order.id } });
+        if (existing)
+            return existing;
+        const dto = {
+            clientId: order.clientId,
+            orderId: order.id,
+            deliveryAddress: order.client?.address ?? null,
+            note: `BL auto-généré pour ${order.reference}`,
+            lines: order.lines.map(l => ({
+                productId: l.productId,
+                quantityOrdered: l.quantity,
+                quantityDelivered: l.quantity,
+            })),
+        };
+        return this.create(dto, userId);
+    }
     async findAll(params) {
         const qb = this.repo
             .createQueryBuilder('dn')

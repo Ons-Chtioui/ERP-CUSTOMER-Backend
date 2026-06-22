@@ -5,12 +5,14 @@ import { Payment } from './entities/payment.entity';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { AddPaymentDto } from './dto/add-payment.dto';
 import { QueryInvoicesDto } from './dto/query-invoices.dto';
+import { DocumentsService } from '../../documents/documents.service';
 export declare class InvoicesService {
     private invoiceRepo;
     private lineRepo;
     private paymentRepo;
     private readonly dataSource;
-    constructor(invoiceRepo: Repository<Invoice>, lineRepo: Repository<InvoiceLine>, paymentRepo: Repository<Payment>, dataSource: DataSource);
+    private readonly documentsService;
+    constructor(invoiceRepo: Repository<Invoice>, lineRepo: Repository<InvoiceLine>, paymentRepo: Repository<Payment>, dataSource: DataSource, documentsService: DocumentsService);
     private generateReference;
     private computeTotals;
     create(dto: CreateInvoiceDto, userId: number): Promise<Invoice>;

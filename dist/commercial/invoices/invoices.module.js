@@ -14,6 +14,7 @@ const invoices_controller_1 = require("./invoices.controller");
 const invoice_entity_1 = require("./entities/invoice.entity");
 const invoice_line_entity_1 = require("./entities/invoice-line.entity");
 const payment_entity_1 = require("./entities/payment.entity");
+const documents_module_1 = require("../../documents/documents.module");
 let InvoicesModule = class InvoicesModule {
 };
 exports.InvoicesModule = InvoicesModule;
@@ -25,6 +26,7 @@ exports.InvoicesModule = InvoicesModule = __decorate([
                 invoice_line_entity_1.InvoiceLine,
                 payment_entity_1.Payment,
             ]),
+            (0, common_1.forwardRef)(() => documents_module_1.DocumentsModule),
         ],
         providers: [invoices_service_1.InvoicesService],
         controllers: [invoices_controller_1.InvoicesController],

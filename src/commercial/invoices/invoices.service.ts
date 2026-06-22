@@ -3,6 +3,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Like } from 'typeorm';
@@ -13,6 +15,7 @@ import { Payment } from './entities/payment.entity';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { AddPaymentDto } from './dto/add-payment.dto';
 import { QueryInvoicesDto } from './dto/query-invoices.dto';
+import { DocumentsService } from '../../documents/documents.service';
 
 interface Totals {
   totalHt: number;
@@ -27,6 +30,8 @@ export class InvoicesService {
     @InjectRepository(InvoiceLine) private lineRepo:    Repository<InvoiceLine>,
     @InjectRepository(Payment)     private paymentRepo: Repository<Payment>,
     private readonly dataSource: DataSource,
+    @Inject(forwardRef(() => DocumentsService))
+    private readonly documentsService: DocumentsService,
   ) {}
 
   // ── Génération référence ──────────────────────────────────────
@@ -158,6 +163,13 @@ export class InvoicesService {
     }
     invoice.status = InvoiceStatus.SENT;
     await this.invoiceRepo.save(invoice);
+
+    try {
+      await this.documentsService.sendInvoiceEmail(id);
+    } catch {
+      // Email optionnel si client sans email ou SMTP indisponible
+    }
+
     return this.findOne(id);
   }
 
@@ -263,6 +275,9 @@ export class InvoicesService {
       );
       await manager.save(creditLines);
 
+      return creditNote;
+    }).then(async (creditNote) => {
+      await this.documentsService.restoreStockForCreditNote(creditNote.id);
       return creditNote;
     });
   }
