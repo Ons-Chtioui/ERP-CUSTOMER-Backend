@@ -18,7 +18,6 @@ const orders_service_1 = require("./orders.service");
 const create_order_dto_1 = require("./dto/create-order.dto");
 const update_order_status_dto_1 = require("./dto/update-order-status.dto");
 const query_orders_dto_1 = require("./dto/query-orders.dto");
-const update_order_lines_dto_1 = require("./dto/update-order-lines.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const permissions_guard_1 = require("../common/guards/permissions.guard");
 const require_permission_decorator_1 = require("../common/decorators/require-permission.decorator");
@@ -39,6 +38,9 @@ let OrdersController = class OrdersController {
     }
     previewLineFulfillment(productId, quantity) {
         return this.service.previewLineFulfillment(productId, quantity);
+    }
+    getStockByWarehouse(productId) {
+        return this.service.getStockByWarehouse(productId);
     }
     findOne(id) {
         return this.service.findOne(id);
@@ -91,6 +93,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "previewLineFulfillment", null);
 __decorate([
+    (0, common_1.Get)('stock-by-warehouse/:productId'),
+    (0, require_permission_decorator_1.RequirePermission)('orders.view'),
+    __param(0, (0, common_1.Param)('productId', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "getStockByWarehouse", null);
+__decorate([
     (0, common_1.Get)(':id'),
     (0, require_permission_decorator_1.RequirePermission)('orders.view'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -115,7 +125,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, update_order_lines_dto_1.UpdateOrderLinesDto, Object]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "updateLines", null);
 __decorate([

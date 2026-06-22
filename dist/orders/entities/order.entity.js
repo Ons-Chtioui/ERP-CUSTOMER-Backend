@@ -13,6 +13,7 @@ exports.Order = exports.OrderStatus = void 0;
 const typeorm_1 = require("typeorm");
 const client_entity_1 = require("../../clients/entities/client.entity");
 const user_entity_1 = require("../../users/entities/user.entity");
+const warehouse_entity_1 = require("../../warehouses/entities/warehouse.entity");
 const order_line_entity_1 = require("./order-line.entity");
 const order_status_history_entity_1 = require("./order-status-history.entity");
 var OrderStatus;
@@ -44,6 +45,15 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'client_id' }),
     __metadata("design:type", client_entity_1.Client)
 ], Order.prototype, "client", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'warehouse_id', type: 'int' }),
+    __metadata("design:type", Number)
+], Order.prototype, "warehouseId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => warehouse_entity_1.Warehouse),
+    (0, typeorm_1.JoinColumn)({ name: 'warehouse_id' }),
+    __metadata("design:type", warehouse_entity_1.Warehouse)
+], Order.prototype, "warehouse", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', default: OrderStatus.DRAFT }),
     __metadata("design:type", String)

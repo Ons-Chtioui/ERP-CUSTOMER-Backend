@@ -27,8 +27,8 @@ export declare class OrdersService {
     constructor(orderRepo: Repository<Order>, lineRepo: Repository<OrderLine>, supplementRepo: Repository<OrderLineSupplement>, historyRepo: Repository<OrderStatusHistory>, productRepo: Repository<Product>, productInventoryRepo: Repository<ProductInventory>, bomRepo: Repository<BomLine>, inventoryItemRepo: Repository<InventoryItem>, warehouseRepo: Repository<Warehouse>, dataSource: DataSource, productsService: ProductsService);
     private generateReference;
     private getProductPricing;
-    private getLineFulfillment;
-    private getFinishedStockTotal;
+    private getLineFulfillmentByWarehouse;
+    private getFinishedStockInWarehouse;
     private deductFinishedStock;
     private restoreFinishedStock;
     private deductComponents;
@@ -48,6 +48,13 @@ export declare class OrdersService {
         totalPages: number;
     }>;
     findOne(id: number): Promise<Order>;
+    getStockByWarehouse(productId: number): Promise<{
+        warehouseId: number;
+        warehouseName: string;
+        stockFini: number;
+        stockFabricable: number;
+        stockTotal: number;
+    }[]>;
     getStats(): Promise<{
         stats: {
             status: string;
@@ -61,6 +68,8 @@ export declare class OrdersService {
     checkAvailability(id: number): Promise<{
         orderId: number;
         reference: string;
+        warehouseId: number;
+        warehouseName: string;
         canConfirm: boolean;
         lines: object[];
         missing: object[];

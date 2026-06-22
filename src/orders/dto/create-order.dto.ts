@@ -4,6 +4,30 @@ import {
   IsInt, Min, Max, ValidateNested, ArrayMinSize, IsArray,
 } from 'class-validator';
 
+export class CreateOrderSupplementDto {
+  @IsInt()
+  @Min(1)
+  componentId!: number;
+
+  @IsNumber()
+  @Min(0.001)
+  quantity!: number;
+
+  @IsNumber()
+  @Min(0)
+  unitPrice!: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  tvaRate?: number;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
+}
+
 export class CreateOrderLineDto {
   @IsInt()
   @Min(1)
@@ -14,24 +38,28 @@ export class CreateOrderLineDto {
   @Min(1)
   quantity!: number;
 
-
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(100)
   discount?: number;
-   @IsOptional()
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateOrderSupplementDto)
   supplements?: CreateOrderSupplementDto[];
 }
 
-
 export class CreateOrderDto {
   @IsInt()
   @Min(1)
   clientId!: number;
+
+  // Entrepôt obligatoire : détermine le stock affiché ET la déduction
+  @IsInt()
+  @Min(1)
+  warehouseId!: number;
 
   @IsOptional()
   @IsString()
@@ -48,27 +76,4 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => CreateOrderLineDto)
   lines!: CreateOrderLineDto[];
-}
-export class CreateOrderSupplementDto{
-  @IsInt()
-  @Min(1)
-  componentId!:number;
-@IsNumber()
-  @Min(0.001)
-  quantity!: number;
-
-  @IsNumber()
-  @Min(0)
-  unitPrice!: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  tvaRate?: number; // défaut 19 si absent
-
-  @IsOptional()
-  @IsString()
-  note?: string;
-  
 }

@@ -2,7 +2,6 @@ import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { QueryOrdersDto } from './dto/query-orders.dto';
-import { UpdateOrderLinesDto } from './dto/update-order-lines.dto';
 export declare class OrdersController {
     private readonly service;
     constructor(service: OrdersService);
@@ -39,16 +38,25 @@ export declare class OrdersController {
         missing: number;
         source: string;
     }>;
+    getStockByWarehouse(productId: number): Promise<{
+        warehouseId: number;
+        warehouseName: string;
+        stockFini: number;
+        stockFabricable: number;
+        stockTotal: number;
+    }[]>;
     findOne(id: number): Promise<import("./entities/order.entity").Order>;
     updateStatus(id: number, dto: UpdateOrderStatusDto, user: {
         id: number;
     }): Promise<import("./entities/order.entity").Order>;
-    updateLines(id: number, dto: UpdateOrderLinesDto, user: {
+    updateLines(id: number, dto: Partial<CreateOrderDto>, user: {
         id: number;
     }): Promise<import("./entities/order.entity").Order>;
     checkAvailability(id: number): Promise<{
         orderId: number;
         reference: string;
+        warehouseId: number;
+        warehouseName: string;
         canConfirm: boolean;
         lines: object[];
         missing: object[];

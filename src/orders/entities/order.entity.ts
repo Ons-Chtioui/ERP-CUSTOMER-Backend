@@ -3,9 +3,10 @@ import {
   ManyToOne, OneToMany, JoinColumn,
   CreateDateColumn, UpdateDateColumn,
 } from 'typeorm';
-import { Client } from '../../clients/entities/client.entity';
-import { User } from '../../users/entities/user.entity';
-import { OrderLine } from './order-line.entity';
+import { Client }             from '../../clients/entities/client.entity';
+import { User }               from '../../users/entities/user.entity';
+import { Warehouse }          from '../../warehouses/entities/warehouse.entity';
+import { OrderLine }          from './order-line.entity';
 import { OrderStatusHistory } from './order-status-history.entity';
 
 export enum OrderStatus {
@@ -19,7 +20,7 @@ export enum OrderStatus {
 
 @Entity('orders')
 export class Order {
-  @PrimaryGeneratedColumn('increment')          // ← number auto-increment
+  @PrimaryGeneratedColumn('increment')
   declare id: number;
 
   @Column({ unique: true })
@@ -31,6 +32,16 @@ export class Order {
   @ManyToOne(() => Client)
   @JoinColumn({ name: 'client_id' })
   declare client: Client;
+
+  // ── Entrepôt de la commande ──────────────────────────────────
+  // Détermine le stock affiché ET l'entrepôt de déduction à la confirmation.
+  // Obligatoire : une commande doit toujours être liée à un entrepôt.
+  @Column({ name: 'warehouse_id', type: 'int' })
+  declare warehouseId: number;
+
+  @ManyToOne(() => Warehouse)
+  @JoinColumn({ name: 'warehouse_id' })
+  declare warehouse: Warehouse;
 
   @Column({ type: 'varchar', default: OrderStatus.DRAFT })
   declare status: OrderStatus;
