@@ -10,6 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { join } from 'path';
 import { WarehousesModule } from './warehouses/warehouses.module';
@@ -21,6 +22,10 @@ import { ProductsModule } from './products/products.module';
 import { ProductCategoriesModule } from './product-categories/product-categories.module';
 import { OrdersModule } from './orders/orders.module';
 import { ClientsModule } from './clients/clients.module';
+
+import { QuotesModule } from './commercial/quotes/quotes.module';
+import { InvoicesModule } from './commercial/invoices/invoices.module';
+import { DeliveryNotesModule } from './commercial/delivery-notes/delivery-notes.module';
 
 @Module({
   imports: [
@@ -40,6 +45,7 @@ import { ClientsModule } from './clients/clients.module';
         synchronize:configService.get('NODE_ENV') !== 'production',
      logging: configService.get('NODE_ENV') === 'development',}),
     }),
+  ScheduleModule.forRoot(),
   ThrottlerModule.forRoot([
     {name: 'short', ttl: 60000, limit: 20},
   ]),
@@ -61,7 +67,7 @@ import { ClientsModule } from './clients/clients.module';
       },
     }),
   }),
-  AuthModule, UsersModule, RolesModule, PermissionsModule, WarehousesModule, ComponentsModule, StockMovementsModule, InventoryModule, StockAlertsModule, ProductsModule, ProductCategoriesModule, OrdersModule, ClientsModule],
+  AuthModule, UsersModule, RolesModule, PermissionsModule, WarehousesModule, ComponentsModule, StockMovementsModule, InventoryModule, StockAlertsModule, ProductsModule, ProductCategoriesModule, OrdersModule, ClientsModule,QuotesModule,InvoicesModule,DeliveryNotesModule],
   controllers: [AppController],
   providers: [AppService],
 })

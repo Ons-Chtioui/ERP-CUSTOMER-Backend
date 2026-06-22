@@ -9,6 +9,10 @@ import { ProductCategory } from '../product-categories/entities/product-category
 import { Product } from '../products/entities/product.entity';
 import { BomLine } from '../products/entities/bom-line.entity';
 import { Component } from '../components/entities/component.entity';
+import { Warehouse } from '../warehouses/entities/warehouse.entity';
+import { Category } from '../components/entities/category.entity';
+import { Supplier } from '../components/entities/supplier.entity';
+import { InventoryItem } from '../components/entities/inventory-item.entity';
 
 // ─── PERMISSIONS COMPLÈTES ──────────────────────────────────────────────────
 const ALL_PERMISSIONS = [
@@ -63,19 +67,43 @@ const ALL_PERMISSIONS = [
   // ============================================
   { nom: 'orders.view',       module: 'Commandes', action: 'Consulter commandes' },
   { nom: 'orders.create',     module: 'Commandes', action: 'Créer commande' },
-  { nom: 'orders.edit',       module: 'Commandes', action: 'Modifier commande (brouillon)' },
+  { nom: 'orders.edit',       module: 'Commandes', action: 'Modifier commande' },
   { nom: 'orders.confirm',    module: 'Commandes', action: 'Confirmer commande' },
-  { nom: 'orders.process',    module: 'Commandes', action: 'Traiter commande (préparer/expédier/livrer)' },
+  { nom: 'orders.process',    module: 'Commandes', action: 'Traiter commande' },
   { nom: 'orders.cancel',     module: 'Commandes', action: 'Annuler commande' },
-  { nom: 'orders.delete',     module: 'Commandes', action: 'Supprimer commande (brouillon)' },
+  { nom: 'orders.delete',     module: 'Commandes', action: 'Supprimer commande' },
 
   // ============================================
-  // MODULE 6 : COMMERCIAL
+  // MODULE 6 : COMMERCIAL - QUOTES (Devis)
   // ============================================
-  { nom: 'invoices.view',     module: 'Commercial', action: 'Voir factures' },
-  { nom: 'invoices.create',   module: 'Commercial', action: 'Créer facture' },
+  { nom: 'quotes.view',       module: 'Commercial', action: 'Consulter devis' },
   { nom: 'quotes.create',     module: 'Commercial', action: 'Créer devis' },
-  { nom: 'credits.create',    module: 'Commercial', action: 'Émettre avoir' },
+  { nom: 'quotes.edit',       module: 'Commercial', action: 'Modifier devis' },
+  { nom: 'quotes.delete',     module: 'Commercial', action: 'Supprimer devis' },
+  { nom: 'quotes.convert',    module: 'Commercial', action: 'Convertir devis en facture' },
+
+  // ============================================
+  // MODULE 6 : COMMERCIAL - INVOICES (Factures)
+  // ============================================
+  { nom: 'invoices.view',     module: 'Commercial', action: 'Consulter factures' },
+  { nom: 'invoices.create',   module: 'Commercial', action: 'Créer facture' },
+  { nom: 'invoices.edit',     module: 'Commercial', action: 'Modifier facture' },
+  { nom: 'invoices.pay',      module: 'Commercial', action: 'Enregistrer paiement' },
+  { nom: 'invoices.cancel',   module: 'Commercial', action: 'Annuler facture' },
+
+  // ============================================
+  // MODULE 6 : COMMERCIAL - CREDITS (Avoirs)
+  // ============================================
+  { nom: 'credits.create',    module: 'Commercial', action: 'Créer avoir' },
+  { nom: 'credits.view',      module: 'Commercial', action: 'Consulter avoirs' },
+
+  // ============================================
+  // MODULE 6 : COMMERCIAL - DELIVERY (Bons de livraison)
+  // ============================================
+  { nom: 'delivery.view',     module: 'Commercial', action: 'Consulter bons de livraison' },
+  { nom: 'delivery.create',   module: 'Commercial', action: 'Créer bon de livraison' },
+  { nom: 'delivery.edit',     module: 'Commercial', action: 'Modifier bon de livraison' },
+  { nom: 'delivery.delete',   module: 'Commercial', action: 'Supprimer bon de livraison' },
 
   // ============================================
   // MODULE 7 : RAPPORTS
@@ -91,27 +119,23 @@ const ROLES_DEF = [
   {
     nom: 'super_admin',
     label: 'Super Admin',
-    perms: ALL_NOMS, // Toutes les permissions
+    perms: ALL_NOMS,
   },
   {
     nom: 'admin',
     label: 'Admin Société',
     perms: [
-      // Module 1
       'users.view', 'users.create', 'users.edit', 'users.roles',
-      // Module 2
       'stock.view', 'stock.create', 'stock.edit', 'stock.transfer', 'stock.inventory',
-      // Module 3
       'components.view', 'components.create', 'components.edit',
-      // Module 4
       'bom.view', 'bom.create', 'bom.edit', 'bom.produce',
-      // Module 5 - Clients
       'clients.view', 'clients.create', 'clients.edit',
-      // Module 5 - Orders
       'orders.view', 'orders.create', 'orders.edit', 'orders.confirm', 'orders.process', 'orders.cancel',
       // Module 6
-      'invoices.view', 'invoices.create', 'quotes.create',
-      // Module 7
+      'quotes.view', 'quotes.create', 'quotes.edit', 'quotes.convert', 'quotes.delete',
+      'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.pay', 'invoices.cancel',
+      'credits.create', 'credits.view',
+      'delivery.view', 'delivery.create', 'delivery.edit', 'delivery.delete',
       'reports.view', 'reports.export',
     ],
   },
@@ -119,34 +143,28 @@ const ROLES_DEF = [
     nom: 'resp_stock',
     label: 'Responsable Stock',
     perms: [
-      // Module 2
       'stock.view', 'stock.create', 'stock.edit', 'stock.delete',
       'stock.transfer', 'stock.alert', 'stock.inventory',
-      // Module 3
       'components.view', 'components.create', 'components.edit',
-      // Module 4
       'bom.view', 'bom.create', 'bom.edit', 'bom.produce',
-      // Module 5
       'clients.view',
       'orders.view', 'orders.process',
+      'delivery.view', 'delivery.edit',
     ],
   },
   {
     nom: 'resp_commercial',
     label: 'Responsable Commercial',
     perms: [
-      // Module 2
       'stock.view',
-      // Module 3
       'components.view',
-      // Module 4
       'bom.view',
-      // Module 5
       'clients.view', 'clients.create', 'clients.edit',
       'orders.view', 'orders.create', 'orders.confirm', 'orders.cancel',
-      // Module 6
-      'invoices.view', 'invoices.create', 'quotes.create',
-      // Module 7
+      'quotes.view', 'quotes.create', 'quotes.edit', 'quotes.convert', 'quotes.delete',
+      'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.pay', 'invoices.cancel',
+      'credits.create', 'credits.view',
+      'delivery.view', 'delivery.create', 'delivery.edit', 'delivery.delete',
       'reports.view',
     ],
   },
@@ -154,13 +172,10 @@ const ROLES_DEF = [
     nom: 'comptable',
     label: 'Comptable',
     perms: [
-      // Module 2
       'stock.view',
-      // Module 5
       'clients.view', 'orders.view',
-      // Module 6
-      'invoices.view', 'credits.create',
-      // Module 7
+      'invoices.view', 'invoices.pay',
+      'credits.view',
       'reports.view', 'reports.export',
     ],
   },
@@ -168,24 +183,50 @@ const ROLES_DEF = [
     nom: 'operateur',
     label: 'Opérateur',
     perms: [
-      // Module 2
       'stock.view',
-      // Module 4
       'bom.view',
-      // Module 5
       'clients.view', 'orders.view',
+      'delivery.view',
     ],
   },
 ];
 
-// ─── Données produits ─────────────────────────────────────────────────────────
+// ─── Données de test ────────────────────────────────────────────────────────
+
+const WAREHOUSES = [
+  { nom: 'Entrepôt Sousse', code: 'WH-SOUSSE-01', ville: 'Sousse', pays: 'Tunisie' },
+  { nom: 'Entrepôt Tunis', code: 'WH-TUNIS-02', ville: 'Tunis', pays: 'Tunisie' },
+  { nom: 'Entrepôt Sfax', code: 'WH-SFAX-03', ville: 'Sfax', pays: 'Tunisie' },
+];
+
+const CATEGORIES = [
+  { nom: 'Mobilier', description: 'Pièces pour mobilier' },
+  { nom: 'Tissage', description: 'Produits textiles' },
+  { nom: 'Plasturgie', description: 'Pièces plastiques' },
+  { nom: 'Quincaillerie', description: 'Vis, écrous, rondelles' },
+];
+
+const SUPPLIERS = [
+  { nom: 'Délice Textile SARL', code: 'DELICE-001', email: 'contact@delicetextile.tn', pays: 'Tunisie' },
+  { nom: 'Plastico Tunis SA', code: 'PLASTICO-001', email: 'commercial@plasticotunis.tn', pays: 'Tunisie' },
+  { nom: 'MécaSud Industries', code: 'MECASUD-001', email: 'contact@mecasud.com.tn', pays: 'Tunisie' },
+];
+
+const COMPONENTS = [
+  { nom: 'Pied de chaise', reference: 'PIED-001', unite: 'unité', prixAchat: 2500, prixVente: 3250, seuilAlerte: 50 },
+  { nom: 'Assise rembourrée', reference: 'ASSISE-001', unite: 'unité', prixAchat: 12000, prixVente: 15600, seuilAlerte: 30 },
+  { nom: 'Dossier ergonomique', reference: 'DOSSIER-001', unite: 'unité', prixAchat: 18000, prixVente: 23400, seuilAlerte: 25 },
+  { nom: 'Vis inox M6', reference: 'VIS-INOX-001', unite: 'unité', prixAchat: 150, prixVente: 200, seuilAlerte: 5000 },
+];
+
 const PRODUCT_CATEGORIES = [
   { nom: 'Mobilier bureau', couleur: '#3B82F6', description: 'Bureaux, chaises, rangements' },
   { nom: 'Sièges',          couleur: '#10B981', description: 'Chaises, fauteuils, tabourets' },
   { nom: 'Rangement',       couleur: '#F59E0B', description: 'Armoires, étagères, tiroirs' },
 ];
 
-// ─── Seed ─────────────────────────────────────────────────────────────────────
+// ─── SEED ─────────────────────────────────────────────────────────────────────
+
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
@@ -196,6 +237,10 @@ async function seed() {
   const productRepo = app.get(getRepositoryToken(Product));
   const bomRepo     = app.get(getRepositoryToken(BomLine));
   const compRepo    = app.get(getRepositoryToken(Component));
+  const warehouseRepo = app.get(getRepositoryToken(Warehouse));
+  const categoryRepo  = app.get(getRepositoryToken(Category));
+  const supplierRepo  = app.get(getRepositoryToken(Supplier));
+  const inventoryRepo = app.get(getRepositoryToken(InventoryItem));
 
   // ── 1. Permissions ────────────────────────────────────────────
   console.log('\n🌱 Création des permissions...');
@@ -229,7 +274,7 @@ async function seed() {
   // ── 3. Super Admin ────────────────────────────────────────────
   console.log('\n🌱 Création du Super Admin...');
   const superRole = await roleRepo.findOne({ where: { nom: 'super_admin' }, relations: { permissions: true } });
-  const existing  = await userRepo.findOne({ where: { email: 'admin@erp.com' } });
+  const existing = await userRepo.findOne({ where: { email: 'admin@erp.com' } });
 
   if (!existing) {
     const hashed = await bcrypt.hash('Admin@1234', 12);
@@ -245,10 +290,78 @@ async function seed() {
     console.log('   + admin@erp.com créé');
   } else {
     await userRepo.update(existing.id, { role: superRole! });
-    console.log('   ✓ Super Admin existant mis à jour avec toutes les permissions');
+    console.log('   ✓ Super Admin existant mis à jour');
   }
 
-  // ── 4. Catégories produits ─────────────────────────────────────
+  // ── 4. Entrepôts ──────────────────────────────────────────────
+  console.log('\n🌱 Création des entrepôts...');
+  for (const w of WAREHOUSES) {
+    let warehouse = await warehouseRepo.findOne({ where: { code: w.code } });
+    if (!warehouse) {
+      warehouse = await warehouseRepo.save(warehouseRepo.create(w));
+      console.log(`   + ${w.nom} (${w.code})`);
+    }
+  }
+
+  // ── 5. Catégories composants ──────────────────────────────────
+  console.log('\n🌱 Création des catégories...');
+  for (const c of CATEGORIES) {
+    let cat = await categoryRepo.findOne({ where: { nom: c.nom } });
+    if (!cat) {
+      cat = await categoryRepo.save(categoryRepo.create(c));
+      console.log(`   + ${c.nom}`);
+    }
+  }
+
+  // ── 6. Fournisseurs ─────────────────────────────────────────────
+  console.log('\n🌱 Création des fournisseurs...');
+  for (const s of SUPPLIERS) {
+    let supplier = await supplierRepo.findOne({ where: { code: s.code } });
+    if (!supplier) {
+      supplier = await supplierRepo.save(supplierRepo.create(s));
+      console.log(`   + ${s.nom}`);
+    }
+  }
+
+  // ── 7. Composants ─────────────────────────────────────────────
+  console.log('\n🌱 Création des composants...');
+  const categories = await categoryRepo.find();
+  const suppliers = await supplierRepo.find();
+  const warehouses = await warehouseRepo.find();
+
+  for (const c of COMPONENTS) {
+    let comp = await compRepo.findOne({ where: { reference: c.reference } });
+    if (!comp) {
+      comp = await compRepo.save(compRepo.create({
+        ...c,
+        category: categories[0],
+        supplier: suppliers[0],
+      }));
+      console.log(`   + ${c.nom} (${c.reference})`);
+    }
+  }
+
+  // ── 8. Stock initial ────────────────────────────────────────────
+  console.log('\n🌱 Création du stock initial...');
+  const components = await compRepo.find();
+  for (const wh of warehouses) {
+    for (const comp of components) {
+      const existingStock = await inventoryRepo.findOne({
+        where: { warehouse: { id: wh.id }, component: { id: comp.id } },
+      });
+      if (!existingStock) {
+        await inventoryRepo.save(inventoryRepo.create({
+          warehouse: wh,
+          component: comp,
+          quantity: 100,
+          reservedQty: 0,
+        }));
+      }
+    }
+  }
+  console.log(`   ✓ Stock initial créé pour ${warehouses.length} entrepôts`);
+
+  // ── 9. Catégories produits ─────────────────────────────────────
   console.log('\n🌱 Catégories produits...');
   const catMap: Record<string, ProductCategory> = {};
   for (const c of PRODUCT_CATEGORIES) {
@@ -260,46 +373,32 @@ async function seed() {
     catMap[c.nom] = cat;
   }
 
-  // ── 5. Produits exemples ─────────────────────────────────────
+  // ── 10. Produits exemples ─────────────────────────────────────
   console.log('\n🌱 Produits exemples...');
-  const components = await compRepo.find({ take: 5 });
+  const allComponents = await compRepo.find({ take: 5 });
 
-  if (components.length >= 3) {
+  if (allComponents.length >= 3) {
     let chaise = await productRepo.findOne({ where: { reference: 'CHAISE-001' } });
     if (!chaise) {
       chaise = await productRepo.save(productRepo.create({
-        nom:         'Chaise de bureau',
-        reference:   'CHAISE-001',
+        nom: 'Chaise de bureau',
+        reference: 'CHAISE-001',
         description: 'Chaise ergonomique avec assise rembourrée',
-        unite:       'unité',
-        prixVente:   89.900,
-        coutMO:      5.000,
+        unite: 'unité',
+        prixVente: 89900,
+        coutMO: 5000,
         seuilAlerte: 10,
-        category:    catMap['Sièges'],
+        category: catMap['Sièges'],
       }));
       console.log('   + Chaise de bureau (CHAISE-001)');
-    }
-
-    let chaiseRouge = await productRepo.findOne({ where: { reference: 'CHAISE-001-R' } });
-    if (!chaiseRouge) {
-      chaiseRouge = await productRepo.save(productRepo.create({
-        nom:       'Chaise de bureau - Rouge',
-        reference: 'CHAISE-001-R',
-        unite:     'unité',
-        prixVente: 94.900,
-        coutMO:    5.000,
-        category:  catMap['Sièges'],
-        parent:    chaise,
-      }));
-      console.log('   + Chaise de bureau - Rouge (CHAISE-001-R)');
     }
 
     const existingBom = await bomRepo.find({ where: { product: { id: chaise.id } } });
     if (existingBom.length === 0) {
       const bomLines = [
-        { product: chaise, component: components[0], quantity: 4 },
-        { product: chaise, component: components[1], quantity: 1 },
-        { product: chaise, component: components[2], quantity: 8 },
+        { product: chaise, component: allComponents[0], quantity: 4 },
+        { product: chaise, component: allComponents[1], quantity: 1 },
+        { product: chaise, component: allComponents[2], quantity: 8 },
       ];
       for (const line of bomLines) {
         await bomRepo.save(bomRepo.create(line));
@@ -311,14 +410,13 @@ async function seed() {
       await productRepo.update(chaise.id, { coutRevient: cout + Number(chaise.coutMO) });
       console.log(`   ✓ Coût de revient recalculé : ${(cout + Number(chaise.coutMO)).toFixed(3)} DTN`);
     }
-  } else {
-    console.log('   ⚠ Pas assez de composants pour créer la BOM exemple');
   }
 
   console.log('\n✅ Seed terminé avec succès !');
-  console.log('   Email    : admin@erp.com');
-  console.log('   Password : Admin@1234');
-  console.log(`   ${ALL_PERMISSIONS.length} permissions créées`);
+  console.log(`   📧 Email    : admin@erp.com`);
+  console.log(`   🔑 Password : Admin@1234`);
+  console.log(`   📊 ${ALL_PERMISSIONS.length} permissions créées`);
+  console.log(`   👤 ${ROLES_DEF.length} rôles créés`);
 
   await app.close();
 }
