@@ -19,97 +19,103 @@ const ALL_PERMISSIONS = [
   // ============================================
   // MODULE 1 : UTILISATEURS
   // ============================================
-  { nom: 'users.view',        module: 'Utilisateurs', action: 'Consulter' },
-  { nom: 'users.create',      module: 'Utilisateurs', action: 'Créer compte' },
-  { nom: 'users.edit',        module: 'Utilisateurs', action: 'Modifier' },
-  { nom: 'users.delete',      module: 'Utilisateurs', action: 'Supprimer' },
-  { nom: 'users.roles',       module: 'Utilisateurs', action: 'Gérer rôles' },
+  { nom: 'users.view', module: 'Utilisateurs', action: 'Consulter' },
+  { nom: 'users.create', module: 'Utilisateurs', action: 'Créer compte' },
+  { nom: 'users.edit', module: 'Utilisateurs', action: 'Modifier' },
+  { nom: 'users.delete', module: 'Utilisateurs', action: 'Supprimer' },
+  { nom: 'users.roles', module: 'Utilisateurs', action: 'Gérer rôles' },
   { nom: 'users.permissions', module: 'Utilisateurs', action: 'Gérer permissions' },
 
   // ============================================
   // MODULE 2 : STOCK
   // ============================================
-  { nom: 'stock.view',        module: 'Stock', action: 'Consulter' },
-  { nom: 'stock.create',      module: 'Stock', action: 'Créer entrée' },
-  { nom: 'stock.edit',        module: 'Stock', action: 'Modifier' },
-  { nom: 'stock.delete',      module: 'Stock', action: 'Supprimer' },
-  { nom: 'stock.transfer',    module: 'Stock', action: 'Transfert entrepôt' },
-  { nom: 'stock.alert',       module: 'Stock', action: 'Gérer alertes' },
-  { nom: 'stock.inventory',   module: 'Stock', action: 'Gérer inventaire' },
+  { nom: 'stock.view', module: 'Stock', action: 'Consulter' },
+  { nom: 'stock.create', module: 'Stock', action: 'Créer entrée' },
+  { nom: 'stock.edit', module: 'Stock', action: 'Modifier' },
+  { nom: 'stock.delete', module: 'Stock', action: 'Supprimer' },
+  { nom: 'stock.transfer', module: 'Stock', action: 'Transfert entrepôt' },
+  { nom: 'stock.alert', module: 'Stock', action: 'Gérer alertes' },
+  { nom: 'stock.inventory', module: 'Stock', action: 'Gérer inventaire' },
 
   // ============================================
   // MODULE 3 : COMPOSANTS
   // ============================================
-  { nom: 'components.view',   module: 'Composants', action: 'Consulter' },
+  { nom: 'components.view', module: 'Composants', action: 'Consulter' },
   { nom: 'components.create', module: 'Composants', action: 'Créer' },
-  { nom: 'components.edit',   module: 'Composants', action: 'Modifier' },
+  { nom: 'components.edit', module: 'Composants', action: 'Modifier' },
   { nom: 'components.delete', module: 'Composants', action: 'Supprimer' },
 
   // ============================================
   // MODULE 4 : BOM / PRODUITS
   // ============================================
-  { nom: 'bom.view',          module: 'BOM', action: 'Consulter' },
-  { nom: 'bom.create',        module: 'BOM', action: 'Créer nomenclature' },
-  { nom: 'bom.edit',          module: 'BOM', action: 'Modifier' },
-  { nom: 'bom.delete',        module: 'BOM', action: 'Supprimer' },
-  { nom: 'bom.produce',       module: 'BOM', action: 'Lancer production' },
+  { nom: 'bom.view', module: 'BOM', action: 'Consulter' },
+  { nom: 'bom.create', module: 'BOM', action: 'Créer nomenclature' },
+  { nom: 'bom.edit', module: 'BOM', action: 'Modifier' },
+  { nom: 'bom.delete', module: 'BOM', action: 'Supprimer' },
+  { nom: 'bom.produce', module: 'BOM', action: 'Lancer production' },
 
   // ============================================
   // MODULE 5 : CLIENTS
   // ============================================
-  { nom: 'clients.view',      module: 'Clients', action: 'Consulter clients' },
-  { nom: 'clients.create',    module: 'Clients', action: 'Créer client' },
-  { nom: 'clients.edit',      module: 'Clients', action: 'Modifier client' },
-  { nom: 'clients.delete',    module: 'Clients', action: 'Supprimer client' },
+  { nom: 'clients.view', module: 'Clients', action: 'Consulter clients' },
+  { nom: 'clients.create', module: 'Clients', action: 'Créer client' },
+  { nom: 'clients.edit', module: 'Clients', action: 'Modifier client' },
+  { nom: 'clients.delete', module: 'Clients', action: 'Supprimer client' },
 
   // ============================================
   // MODULE 5 : ORDERS
   // ============================================
-  { nom: 'orders.view',       module: 'Commandes', action: 'Consulter commandes' },
-  { nom: 'orders.create',     module: 'Commandes', action: 'Créer commande' },
-  { nom: 'orders.edit',       module: 'Commandes', action: 'Modifier commande' },
-  { nom: 'orders.confirm',    module: 'Commandes', action: 'Confirmer commande' },
-  { nom: 'orders.process',    module: 'Commandes', action: 'Traiter commande' },
-  { nom: 'orders.cancel',     module: 'Commandes', action: 'Annuler commande' },
-  { nom: 'orders.delete',     module: 'Commandes', action: 'Supprimer commande' },
+  { nom: 'orders.view', module: 'Commandes', action: 'Consulter commandes' },
+  { nom: 'orders.create', module: 'Commandes', action: 'Créer commande' },
+  { nom: 'orders.edit', module: 'Commandes', action: 'Modifier commande' },
+  { nom: 'orders.confirm', module: 'Commandes', action: 'Confirmer commande' },
+  { nom: 'orders.process', module: 'Commandes', action: 'Traiter commande' },
+  { nom: 'orders.cancel', module: 'Commandes', action: 'Annuler commande' },
+  { nom: 'orders.delete', module: 'Commandes', action: 'Supprimer commande' },
 
   // ============================================
   // MODULE 6 : COMMERCIAL - QUOTES (Devis)
   // ============================================
-  { nom: 'quotes.view',       module: 'Commercial', action: 'Consulter devis' },
-  { nom: 'quotes.create',     module: 'Commercial', action: 'Créer devis' },
-  { nom: 'quotes.edit',       module: 'Commercial', action: 'Modifier devis' },
-  { nom: 'quotes.delete',     module: 'Commercial', action: 'Supprimer devis' },
-  { nom: 'quotes.convert',    module: 'Commercial', action: 'Convertir devis en facture' },
+  { nom: 'quotes.view', module: 'Commercial', action: 'Consulter devis' },
+  { nom: 'quotes.create', module: 'Commercial', action: 'Créer devis' },
+  { nom: 'quotes.edit', module: 'Commercial', action: 'Modifier devis' },
+  { nom: 'quotes.delete', module: 'Commercial', action: 'Supprimer devis' },
+  { nom: 'quotes.convert', module: 'Commercial', action: 'Convertir devis en facture' },
 
   // ============================================
   // MODULE 6 : COMMERCIAL - INVOICES (Factures)
   // ============================================
-  { nom: 'invoices.view',     module: 'Commercial', action: 'Consulter factures' },
-  { nom: 'invoices.create',   module: 'Commercial', action: 'Créer facture' },
-  { nom: 'invoices.edit',     module: 'Commercial', action: 'Modifier facture' },
-  { nom: 'invoices.pay',      module: 'Commercial', action: 'Enregistrer paiement' },
-  { nom: 'invoices.cancel',   module: 'Commercial', action: 'Annuler facture' },
+  { nom: 'invoices.view', module: 'Commercial', action: 'Consulter factures' },
+  { nom: 'invoices.create', module: 'Commercial', action: 'Créer facture' },
+  { nom: 'invoices.edit', module: 'Commercial', action: 'Modifier facture' },
+  { nom: 'invoices.pay', module: 'Commercial', action: 'Enregistrer paiement' },
+  { nom: 'invoices.cancel', module: 'Commercial', action: 'Annuler facture' },
 
   // ============================================
   // MODULE 6 : COMMERCIAL - CREDITS (Avoirs)
   // ============================================
-  { nom: 'credits.create',    module: 'Commercial', action: 'Créer avoir' },
-  { nom: 'credits.view',      module: 'Commercial', action: 'Consulter avoirs' },
+  { nom: 'credits.create', module: 'Commercial', action: 'Créer avoir' },
+  { nom: 'credits.view', module: 'Commercial', action: 'Consulter avoirs' },
 
   // ============================================
   // MODULE 6 : COMMERCIAL - DELIVERY (Bons de livraison)
   // ============================================
-  { nom: 'delivery.view',     module: 'Commercial', action: 'Consulter bons de livraison' },
-  { nom: 'delivery.create',   module: 'Commercial', action: 'Créer bon de livraison' },
-  { nom: 'delivery.edit',     module: 'Commercial', action: 'Modifier bon de livraison' },
-  { nom: 'delivery.delete',   module: 'Commercial', action: 'Supprimer bon de livraison' },
+  { nom: 'delivery.view', module: 'Commercial', action: 'Consulter bons de livraison' },
+  { nom: 'delivery.create', module: 'Commercial', action: 'Créer bon de livraison' },
+  { nom: 'delivery.edit', module: 'Commercial', action: 'Modifier bon de livraison' },
+  { nom: 'delivery.delete', module: 'Commercial', action: 'Supprimer bon de livraison' },
 
   // ============================================
-  // MODULE 7 : RAPPORTS
+  // MODULE 7 : ANALYTICS / DASHBOARD
   // ============================================
-  { nom: 'reports.view',      module: 'Rapports', action: 'Consulter' },
-  { nom: 'reports.export',    module: 'Rapports', action: 'Exporter' },
+  { nom: 'analytics.read', module: 'Analytics', action: 'Consulter les données' },
+  { nom: 'analytics.export', module: 'Analytics', action: 'Exporter les données' },
+
+  // ============================================
+  // MODULE 7 : RAPPORTS (Ancien)
+  // ============================================
+  { nom: 'reports.view', module: 'Rapports', action: 'Consulter' },
+  { nom: 'reports.export', module: 'Rapports', action: 'Exporter' },
 ];
 
 const ALL_NOMS = ALL_PERMISSIONS.map((p) => p.nom);
@@ -125,17 +131,24 @@ const ROLES_DEF = [
     nom: 'admin',
     label: 'Admin Société',
     perms: [
-      'users.view', 'users.create', 'users.edit', 'users.roles',
-      'stock.view', 'stock.create', 'stock.edit', 'stock.transfer', 'stock.inventory',
-      'components.view', 'components.create', 'components.edit',
-      'bom.view', 'bom.create', 'bom.edit', 'bom.produce',
-      'clients.view', 'clients.create', 'clients.edit',
-      'orders.view', 'orders.create', 'orders.edit', 'orders.confirm', 'orders.process', 'orders.cancel',
+      // Module 1
+      'users.view', 'users.create', 'users.edit', 'users.roles', 'users.permissions',
+      // Module 2
+      'stock.view', 'stock.create', 'stock.edit', 'stock.delete', 'stock.transfer', 'stock.alert', 'stock.inventory',
+      // Module 3
+      'components.view', 'components.create', 'components.edit', 'components.delete',
+      // Module 4
+      'bom.view', 'bom.create', 'bom.edit', 'bom.delete', 'bom.produce',
+      // Module 5
+      'clients.view', 'clients.create', 'clients.edit', 'clients.delete',
+      'orders.view', 'orders.create', 'orders.edit', 'orders.confirm', 'orders.process', 'orders.cancel', 'orders.delete',
       // Module 6
-      'quotes.view', 'quotes.create', 'quotes.edit', 'quotes.convert', 'quotes.delete',
+      'quotes.view', 'quotes.create', 'quotes.edit', 'quotes.delete', 'quotes.convert',
       'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.pay', 'invoices.cancel',
       'credits.create', 'credits.view',
       'delivery.view', 'delivery.create', 'delivery.edit', 'delivery.delete',
+      // Module 7
+      'analytics.read', 'analytics.export',
       'reports.view', 'reports.export',
     ],
   },
@@ -143,39 +156,57 @@ const ROLES_DEF = [
     nom: 'resp_stock',
     label: 'Responsable Stock',
     perms: [
+      // Module 2
       'stock.view', 'stock.create', 'stock.edit', 'stock.delete',
       'stock.transfer', 'stock.alert', 'stock.inventory',
+      // Module 3
       'components.view', 'components.create', 'components.edit',
+      // Module 4
       'bom.view', 'bom.create', 'bom.edit', 'bom.produce',
+      // Module 5
       'clients.view',
       'orders.view', 'orders.process',
+      // Module 6
       'delivery.view', 'delivery.edit',
+      // Module 7
+      'analytics.read',
     ],
   },
   {
     nom: 'resp_commercial',
     label: 'Responsable Commercial',
     perms: [
+      // Module 2
       'stock.view',
+      // Module 3
       'components.view',
+      // Module 4
       'bom.view',
+      // Module 5
       'clients.view', 'clients.create', 'clients.edit',
       'orders.view', 'orders.create', 'orders.confirm', 'orders.cancel',
+      // Module 6
       'quotes.view', 'quotes.create', 'quotes.edit', 'quotes.convert', 'quotes.delete',
       'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.pay', 'invoices.cancel',
       'credits.create', 'credits.view',
       'delivery.view', 'delivery.create', 'delivery.edit', 'delivery.delete',
-      'reports.view',
+      // Module 7
+      'analytics.read', 'analytics.export',
     ],
   },
   {
     nom: 'comptable',
     label: 'Comptable',
     perms: [
+      // Module 2
       'stock.view',
+      // Module 5
       'clients.view', 'orders.view',
+      // Module 6
       'invoices.view', 'invoices.pay',
       'credits.view',
+      // Module 7
+      'analytics.read', 'analytics.export',
       'reports.view', 'reports.export',
     ],
   },
@@ -183,10 +214,16 @@ const ROLES_DEF = [
     nom: 'operateur',
     label: 'Opérateur',
     perms: [
+      // Module 2
       'stock.view',
+      // Module 4
       'bom.view',
+      // Module 5
       'clients.view', 'orders.view',
+      // Module 6
       'delivery.view',
+      // Module 7
+      'analytics.read',
     ],
   },
 ];
@@ -221,8 +258,8 @@ const COMPONENTS = [
 
 const PRODUCT_CATEGORIES = [
   { nom: 'Mobilier bureau', couleur: '#3B82F6', description: 'Bureaux, chaises, rangements' },
-  { nom: 'Sièges',          couleur: '#10B981', description: 'Chaises, fauteuils, tabourets' },
-  { nom: 'Rangement',       couleur: '#F59E0B', description: 'Armoires, étagères, tiroirs' },
+  { nom: 'Sièges', couleur: '#10B981', description: 'Chaises, fauteuils, tabourets' },
+  { nom: 'Rangement', couleur: '#F59E0B', description: 'Armoires, étagères, tiroirs' },
 ];
 
 // ─── SEED ─────────────────────────────────────────────────────────────────────
@@ -230,16 +267,16 @@ const PRODUCT_CATEGORIES = [
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
-  const permRepo    = app.get(getRepositoryToken(Permission));
-  const roleRepo    = app.get(getRepositoryToken(Role));
-  const userRepo    = app.get(getRepositoryToken(User));
+  const permRepo = app.get(getRepositoryToken(Permission));
+  const roleRepo = app.get(getRepositoryToken(Role));
+  const userRepo = app.get(getRepositoryToken(User));
   const catProdRepo = app.get(getRepositoryToken(ProductCategory));
   const productRepo = app.get(getRepositoryToken(Product));
-  const bomRepo     = app.get(getRepositoryToken(BomLine));
-  const compRepo    = app.get(getRepositoryToken(Component));
+  const bomRepo = app.get(getRepositoryToken(BomLine));
+  const compRepo = app.get(getRepositoryToken(Component));
   const warehouseRepo = app.get(getRepositoryToken(Warehouse));
-  const categoryRepo  = app.get(getRepositoryToken(Category));
-  const supplierRepo  = app.get(getRepositoryToken(Supplier));
+  const categoryRepo = app.get(getRepositoryToken(Category));
+  const supplierRepo = app.get(getRepositoryToken(Supplier));
   const inventoryRepo = app.get(getRepositoryToken(InventoryItem));
 
   // ── 1. Permissions ────────────────────────────────────────────
@@ -278,15 +315,17 @@ async function seed() {
 
   if (!existing) {
     const hashed = await bcrypt.hash('Admin@1234', 12);
-    await userRepo.save(userRepo.create({
-      nom: 'Admin',
-      prenom: 'Super',
-      email: 'admin@erp.com',
-      password: hashed,
-      role: superRole!,
-      isActive: true,
-      emailVerifiedAt: new Date(),
-    }));
+    await userRepo.save(
+      userRepo.create({
+        nom: 'Admin',
+        prenom: 'Super',
+        email: 'admin@erp.com',
+        password: hashed,
+        role: superRole!,
+        isActive: true,
+        emailVerifiedAt: new Date(),
+      }),
+    );
     console.log('   + admin@erp.com créé');
   } else {
     await userRepo.update(existing.id, { role: superRole! });
@@ -332,11 +371,13 @@ async function seed() {
   for (const c of COMPONENTS) {
     let comp = await compRepo.findOne({ where: { reference: c.reference } });
     if (!comp) {
-      comp = await compRepo.save(compRepo.create({
-        ...c,
-        category: categories[0],
-        supplier: suppliers[0],
-      }));
+      comp = await compRepo.save(
+        compRepo.create({
+          ...c,
+          category: categories[0],
+          supplier: suppliers[0],
+        }),
+      );
       console.log(`   + ${c.nom} (${c.reference})`);
     }
   }
@@ -350,12 +391,14 @@ async function seed() {
         where: { warehouse: { id: wh.id }, component: { id: comp.id } },
       });
       if (!existingStock) {
-        await inventoryRepo.save(inventoryRepo.create({
-          warehouse: wh,
-          component: comp,
-          quantity: 100,
-          reservedQty: 0,
-        }));
+        await inventoryRepo.save(
+          inventoryRepo.create({
+            warehouse: wh,
+            component: comp,
+            quantity: 100,
+            reservedQty: 0,
+          }),
+        );
       }
     }
   }
@@ -380,16 +423,18 @@ async function seed() {
   if (allComponents.length >= 3) {
     let chaise = await productRepo.findOne({ where: { reference: 'CHAISE-001' } });
     if (!chaise) {
-      chaise = await productRepo.save(productRepo.create({
-        nom: 'Chaise de bureau',
-        reference: 'CHAISE-001',
-        description: 'Chaise ergonomique avec assise rembourrée',
-        unite: 'unité',
-        prixVente: 89900,
-        coutMO: 5000,
-        seuilAlerte: 10,
-        category: catMap['Sièges'],
-      }));
+      chaise = await productRepo.save(
+        productRepo.create({
+          nom: 'Chaise de bureau',
+          reference: 'CHAISE-001',
+          description: 'Chaise ergonomique avec assise rembourrée',
+          unite: 'unité',
+          prixVente: 89900,
+          coutMO: 5000,
+          seuilAlerte: 10,
+          category: catMap['Sièges'],
+        }),
+      );
       console.log('   + Chaise de bureau (CHAISE-001)');
     }
 
@@ -405,7 +450,10 @@ async function seed() {
       }
       console.log(`   + BOM Chaise (${bomLines.length} composants)`);
 
-      const bom = await bomRepo.find({ where: { product: { id: chaise.id } }, relations: { component: true } });
+      const bom = await bomRepo.find({
+        where: { product: { id: chaise.id } },
+        relations: { component: true },
+      });
       const cout = bom.reduce((s: number, l: BomLine) => s + Number(l.quantity) * Number(l.component.prixAchat), 0);
       await productRepo.update(chaise.id, { coutRevient: cout + Number(chaise.coutMO) });
       console.log(`   ✓ Coût de revient recalculé : ${(cout + Number(chaise.coutMO)).toFixed(3)} DTN`);
