@@ -27,7 +27,7 @@ import { QuotesModule } from './commercial/quotes/quotes.module';
 import { InvoicesModule } from './commercial/invoices/invoices.module';
 import { DeliveryNotesModule } from './commercial/delivery-notes/delivery-notes.module';
 import { DocumentsModule } from './documents/documents.module';
-import { DashboardModule } from './dashboard/dashboard.module';
+
 import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
@@ -70,7 +70,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
       },
     }),
   }),
-  AuthModule, UsersModule, RolesModule, PermissionsModule, WarehousesModule, ComponentsModule, StockMovementsModule, InventoryModule, StockAlertsModule, ProductsModule, ProductCategoriesModule, OrdersModule, ClientsModule,QuotesModule,InvoicesModule,DeliveryNotesModule, DocumentsModule, DashboardModule, AnalyticsModule],
+  AuthModule, UsersModule, RolesModule, PermissionsModule, WarehousesModule, ComponentsModule, StockMovementsModule, InventoryModule, StockAlertsModule, ProductsModule, ProductCategoriesModule, OrdersModule, ClientsModule,QuotesModule,InvoicesModule,DeliveryNotesModule, DocumentsModule, AnalyticsModule],
   controllers: [AppController],
   providers: [AppService],
 })
