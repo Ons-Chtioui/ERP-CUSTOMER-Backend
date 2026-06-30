@@ -7,16 +7,29 @@ import { Invoice } from '../commercial/invoices/entities/invoice.entity';
 import { DeliveryNote } from '../commercial/delivery-notes/entities/delivery-note.entity';
 import { Order } from '../orders/entities/order.entity';
 import { InventorySession } from '../inventory/entities/inventory-session.entity';
+import { InventoryLine } from '../inventory/entities/inventory-line.entity';
 import { ProductInventory } from '../products/entities/product-inventory.entity';
+import { BomLine } from '../products/entities/bom-line.entity';
+import { InventoryItem } from '../components/entities/inventory-item.entity';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Quote, Invoice, DeliveryNote, Order, InventorySession, ProductInventory,
+      Quote,
+      Invoice,
+      DeliveryNote,
+      Order,
+      InventorySession,
+      InventoryLine,
+      ProductInventory,
+      BomLine,
+      InventoryItem,
     ]),
+    MailerModule
   ],
-  providers: [DocumentsService],
+  providers:   [DocumentsService],
   controllers: [DocumentsController],
-  exports: [DocumentsService],
+  exports:     [DocumentsService],
 })
 export class DocumentsModule {}
