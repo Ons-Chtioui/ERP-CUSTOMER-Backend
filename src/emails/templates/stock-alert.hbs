@@ -1,0 +1,83 @@
+<!-- src/emails/templates/stock-alert.hbs -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>⚠️ Alerte Stock</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Arial, sans-serif; font-size:14px; color:#1f2937; background:#f9fafb; }
+    .wrapper { max-width:640px; margin:0 auto; padding:24px 16px; }
+    .card { background:#fff; border-radius:10px; overflow:hidden;
+            box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+    .header { background:#dc2626; padding:28px 32px; }
+    .header h1 { color:#fff; font-size:22px; }
+    .header p  { color:#fecaca; font-size:13px; margin-top:4px; }
+    .body { padding:28px 32px; }
+    .body p { margin-bottom:14px; line-height:1.6; }
+    table { width:100%; border-collapse:collapse; margin:16px 0; font-size:13px; }
+    thead th { background:#dc2626; color:#fff; padding:10px 12px; text-align:left; }
+    tbody tr:nth-child(even) { background:#fff5f5; }
+    tbody td { padding:9px 12px; border-bottom:1px solid #fee2e2; }
+    .badge-rupture { display:inline-block; background:#fee2e2; color:#991b1b;
+                     border-radius:4px; padding:2px 8px; font-weight:600; font-size:12px; }
+    .badge-critique { display:inline-block; background:#fef3c7; color:#92400e;
+                      border-radius:4px; padding:2px 8px; font-weight:600; font-size:12px; }
+    .footer { padding:20px 32px; background:#f9fafb;
+              border-top:1px solid #e5e7eb; font-size:12px;
+              color:#6b7280; text-align:center; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="header">
+      <h1>⚠️ Alerte Stock Critique</h1>
+      <p>{{components.length}} composant(s) nécessitent votre attention</p>
+    </div>
+    <div class="body">
+      <p>Bonjour,</p>
+      <p>Les composants suivants ont atteint un niveau critique et nécessitent un réapprovisionnement urgent :</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Composant</th>
+            <th>Référence</th>
+            <th style="text-align:right">Stock actuel</th>
+            <th style="text-align:right">Stock minimum</th>
+            <th>État</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each components}}
+          <tr>
+            <td><strong>{{this.name}}</strong></td>
+            <td style="font-family:monospace;font-size:12px">{{this.reference}}</td>
+            <td style="text-align:right;font-weight:600;color:{{#if this.isRupture}}#dc2626{{else}}#d97706{{/if}}">
+              {{this.stock}}
+            </td>
+            <td style="text-align:right;color:#6b7280">{{this.minimum}}</td>
+            <td>
+              {{#if this.isRupture}}
+              <span class="badge-rupture">RUPTURE</span>
+              {{else}}
+              <span class="badge-critique">CRITIQUE</span>
+              {{/if}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+
+      <p style="margin-top:16px;font-size:13px;color:#6b7280">
+        Veuillez procéder à un réapprovisionnement dès que possible.
+      </p>
+    </div>
+    <div class="footer">
+      {{companyName}} — Alerte générée automatiquement par le système ERP.
+    </div>
+  </div>
+</div>
+</body>
+</html>

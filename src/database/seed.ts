@@ -122,6 +122,9 @@ const ALL_PERMISSIONS = [
   // ============================================
   { nom: 'emails.read', module: 'Emails', action: 'Consulter l\'historique' },
   { nom: 'emails.create', module: 'Emails', action: 'Renvoyer un email' },
+  // Module 8 : NOTIFICATIONS
+{ nom: 'notifications.read', module: 'Notifications', action: 'Consulter' },
+{ nom: 'notifications.write', module: 'Notifications', action: 'Gérer' },
 ];
 
 const ALL_NOMS = ALL_PERMISSIONS.map((p) => p.nom);
@@ -202,6 +205,7 @@ const ROLES_DEF = [
       'analytics.read', 'analytics.export',
       // Module 8
       'emails.read', 'emails.create',
+      
     ],
   },
   {
@@ -290,7 +294,7 @@ async function seed() {
   const inventoryRepo = app.get(getRepositoryToken(InventoryItem));
 
   // ── 1. Permissions ────────────────────────────────────────────
-  console.log('\n🌱 Création des permissions...');
+  console.log('\n Création des permissions...');
   const savedPerms: Permission[] = [];
   for (const p of ALL_PERMISSIONS) {
     let perm = await permRepo.findOne({ where: { nom: p.nom } });
