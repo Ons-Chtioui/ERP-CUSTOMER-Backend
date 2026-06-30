@@ -116,6 +116,12 @@ const ALL_PERMISSIONS = [
   // ============================================
   { nom: 'reports.view', module: 'Rapports', action: 'Consulter' },
   { nom: 'reports.export', module: 'Rapports', action: 'Exporter' },
+
+  // ============================================
+  // MODULE 8 : EMAILS
+  // ============================================
+  { nom: 'emails.read', module: 'Emails', action: 'Consulter l\'historique' },
+  { nom: 'emails.create', module: 'Emails', action: 'Renvoyer un email' },
 ];
 
 const ALL_NOMS = ALL_PERMISSIONS.map((p) => p.nom);
@@ -150,6 +156,8 @@ const ROLES_DEF = [
       // Module 7
       'analytics.read', 'analytics.export',
       'reports.view', 'reports.export',
+      // Module 8
+      'emails.read', 'emails.create',
     ],
   },
   {
@@ -192,6 +200,8 @@ const ROLES_DEF = [
       'delivery.view', 'delivery.create', 'delivery.edit', 'delivery.delete',
       // Module 7
       'analytics.read', 'analytics.export',
+      // Module 8
+      'emails.read', 'emails.create',
     ],
   },
   {

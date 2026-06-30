@@ -13,7 +13,7 @@ import * as bcrypt from 'bcrypt';
 jest.mock('uuid', () => ({ v4: () => 'mock-uuid-1234' }));
 
 import { AuthService } from './auth.service';
-import { User } from '../users/user.entity';
+import { User } from '../users/entities/user.entity';
 import { LoginLog } from './entities/login-log.entity';
 import { PasswordReset } from './entities/password-reset.entity';
 

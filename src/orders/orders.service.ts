@@ -2,7 +2,7 @@ import {
   Injectable, NotFoundException, BadRequestException, Inject, forwardRef,
 } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
-import { Repository, DataSource, EntityManager } from 'typeorm';
+import { Repository, DataSource, EntityManager, Like } from 'typeorm';
 import { Order, OrderStatus }        from './entities/order.entity';
 import { OrderLine }                 from './entities/order-line.entity';
 import { OrderLineSupplement }       from './entities/order-line-supplement.entity';
@@ -13,11 +13,12 @@ import { BomLine }                   from '../products/entities/bom-line.entity'
 import { ProductInventory }          from '../products/entities/product-inventory.entity';
 import { InventoryItem }             from '../components/entities/inventory-item.entity';
 import { Warehouse }                 from '../warehouses/entities/warehouse.entity';
-import { ProductsService }           from '../products/products.service';
+import { StockAlertsService } from '../stock-alerts/stock-alerts.service';
 import { CreateOrderDto }            from './dto/create-order.dto';
 import { UpdateOrderStatusDto }      from './dto/update-order-status.dto';
 import { QueryOrdersDto }            from './dto/query-orders.dto';
 import { DeliveryNotesService }      from '../commercial/delivery-notes/delivery-notes.service';
+import { ProductsService } from 'src/products/products.service';
 
 const DEFAULT_TVA = 19;
 
@@ -64,14 +65,16 @@ export class OrdersService {
     @InjectDataSource()
     private readonly dataSource: DataSource,
     private readonly productsService: ProductsService,
+    private readonly stockAlertsService: StockAlertsService,
     @Inject(forwardRef(() => DeliveryNotesService))
     private readonly deliveryNotesService: DeliveryNotesService,
   ) {}
 
   // ── Génération référence ──────────────────────────────────────
   private async generateReference(): Promise<string> {
-    const year  = new Date().getFullYear();
-    const count = await this.orderRepo.count();
+    const year    = new Date().getFullYear();
+    const pattern = `CMD-${year}-%`;
+    const count   = await this.orderRepo.count({ where: { reference: Like(pattern) } });
     return `CMD-${year}-${String(count + 1).padStart(4, '0')}`;
   }
 
@@ -249,6 +252,16 @@ export class OrdersService {
         throw new BadRequestException(
           `Stock composant "${bom.component.nom}" insuffisant dans cet entrepôt`,
         );
+      // FIX Bug 3 : vérifier et créer une alerte si seuil atteint
+      const afterRaw = await manager
+        .createQueryBuilder(InventoryItem, 'i')
+        .select('COALESCE(SUM(i.quantity), 0)', 'total')
+        .where('i.component_id = :cId', { cId: bom.component.id })
+        .andWhere('i.warehouse_id = :wId', { wId: warehouseId })
+        .getRawOne() as { total: string };
+      await this.stockAlertsService.checkAndCreate(
+        manager, warehouseId, bom.component.id, Number(afterRaw.total),
+      );
     }
   }
 

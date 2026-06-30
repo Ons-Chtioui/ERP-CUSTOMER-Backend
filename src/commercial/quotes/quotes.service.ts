@@ -185,9 +185,10 @@ export class QuotesService {
         `Impossible de convertir un devis ${quote.status}`,
       );
     }
-    if (quote.status === QuoteStatus.DRAFT) {
+    // Règle métier : seul ACCEPTED peut être converti (cohérent avec les diagrammes M6)
+    if (quote.status !== QuoteStatus.ACCEPTED) {
       throw new BadRequestException(
-        'Le devis doit être au moins SENT ou ACCEPTED pour être converti',
+        'Seuls les devis ACCEPTED peuvent être convertis en facture',
       );
     }
 

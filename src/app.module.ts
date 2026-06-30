@@ -9,7 +9,6 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { join } from 'path';
@@ -29,6 +28,8 @@ import { DeliveryNotesModule } from './commercial/delivery-notes/delivery-notes.
 import { DocumentsModule } from './documents/documents.module';
 
 import { AnalyticsModule } from './analytics/analytics.module';
+import { EmailsModule } from './emails/emails.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -45,32 +46,36 @@ import { AnalyticsModule } from './analytics/analytics.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize:configService.get('NODE_ENV') !== 'production',
-     logging: configService.get('NODE_ENV') === 'development',}),
+        synchronize: configService.get('NODE_ENV') !== 'production',
+        logging: configService.get('NODE_ENV') === 'development',
+      }),
     }),
   ScheduleModule.forRoot(),
   ThrottlerModule.forRoot([
     {name: 'short', ttl: 60000, limit: 20},
   ]),
-  MailerModule.forRootAsync({
-    inject:[ConfigService],
-    useFactory: (configService: ConfigService) => ({
-      transport: {
-        host: configService.get('MAIL_HOST'),
-        port: configService.get<number>('MAIL_PORT'),
-        auth: {
-          user: configService.get('MAIL_USER'),
-          pass: configService.get('MAIL_PASS'),
-        },
-      },
-      defaults: { from: configService.get('MAIL_FROM') },
-      template: {
-        dir: join(__dirname, 'templates'),
-        // Avoid adapter import (package subpath not exported in this version)
-      },
-    }),
-  }),
-  AuthModule, UsersModule, RolesModule, PermissionsModule, WarehousesModule, ComponentsModule, StockMovementsModule, InventoryModule, StockAlertsModule, ProductsModule, ProductCategoriesModule, OrdersModule, ClientsModule,QuotesModule,InvoicesModule,DeliveryNotesModule, DocumentsModule, AnalyticsModule],
+
+    AuthModule,
+    UsersModule,
+    RolesModule,
+    PermissionsModule,
+    WarehousesModule,
+    ComponentsModule,
+    StockMovementsModule,
+    InventoryModule,
+    StockAlertsModule,
+    ProductsModule,
+    ProductCategoriesModule,
+    OrdersModule,
+    ClientsModule,
+    QuotesModule,
+    InvoicesModule,
+    DeliveryNotesModule,
+    DocumentsModule,
+    AnalyticsModule,
+    EmailsModule,
+    EventsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

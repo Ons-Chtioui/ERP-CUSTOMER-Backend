@@ -33,13 +33,16 @@ export class AnalyticsService {
     const start = `${y}-01-01`;
     const end   = `${y}-12-31`;
 
-    // Stock critique : composants dont le stock total <= seuilAlerte
-    const lowStockCount = await this.inventoryRepo
+    // Stock critique : composants DISTINCTS dont le stock total <= seuilAlerte
+    // FIX : COUNT DISTINCT component_id pour ne pas compter plusieurs fois le même composant
+    const lowStockRaw = await this.inventoryRepo
       .createQueryBuilder('i')
       .innerJoin('i.component', 'c')
-      .where('i.quantity <= c.seuilAlerte')
-      .andWhere('i.quantity > 0')
-      .getCount();
+      .select('COUNT(DISTINCT i.component_id)', 'count')
+      .where('i.quantity <= c.seuil_alerte')
+      .andWhere('c.seuil_alerte > 0')
+      .getRawOne() as { count: string };
+    const lowStockCount = Number(lowStockRaw?.count ?? 0);
 
     const [
       caResult,

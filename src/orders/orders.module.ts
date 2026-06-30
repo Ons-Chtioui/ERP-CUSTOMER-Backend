@@ -17,13 +17,16 @@ import { DeliveryNotesModule } from '../commercial/delivery-notes/delivery-notes
 import { OrdersService }    from './orders.service';
 import { OrdersController } from './orders.controller';
 import { OrderLineSupplement } from './entities/order-line-supplement.entity';
+import { StockAlertsModule } from 'src/stock-alerts/stock-alerts.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Order, OrderLine, OrderStatusHistory, OrderModification, OrderLineSupplement,
       Product, BomLine, ProductInventory, InventoryItem, Warehouse,
+      
     ]),
+    StockAlertsModule,
     ProductsModule,
     forwardRef(() => DeliveryNotesModule),
   ],
