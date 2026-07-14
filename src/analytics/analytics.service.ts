@@ -39,8 +39,8 @@ export class AnalyticsService {
       .createQueryBuilder('i')
       .innerJoin('i.component', 'c')
       .select('COUNT(DISTINCT i.component_id)', 'count')
-      .where('i.quantity <= c.seuil_alerte')
-      .andWhere('c.seuil_alerte > 0')
+      .where('i.quantity <= c.seuilAlerte')
+      .andWhere('c.seuilAlerte > 0')
       .getRawOne() as { count: string };
     const lowStockCount = Number(lowStockRaw?.count ?? 0);
 
@@ -172,10 +172,15 @@ export class AnalyticsService {
       .select('c.id',                                     'id')
       .addSelect('c.nom',                                 'nom')
       .addSelect('c.reference',                           'reference')
-      .addSelect('c.seuil_alerte',                        'seuilAlerte')
-      .addSelect('c.prix_achat',                          'prixAchat')
+      .addSelect('c.seuilAlerte',                         'seuilAlerte')
+      .addSelect('c.prixAchat',                           'prixAchat')
       .addSelect('COALESCE(SUM(i.quantity), 0)',          'totalQuantity')
-      .groupBy('c.id, c.nom, c.reference, c.seuil_alerte, c.prix_achat')
+      // GROUP BY doit inclure toutes les colonnes non-agrégées
+      .groupBy('c.id')
+      .addGroupBy('c.nom')
+      .addGroupBy('c.reference')
+      .addGroupBy('c.seuilAlerte')
+      .addGroupBy('c.prixAchat')
       .orderBy('COALESCE(SUM(i.quantity), 0)', 'ASC')
       .getRawMany();
 
