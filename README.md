@@ -2,97 +2,110 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<p align="center">API backend de l'ERP — gestion de stock, production (BOM), commandes et commercial.</p>
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  <img src="https://img.shields.io/badge/NestJS-10-E0234E?logo=nestjs&logoColor=white" alt="NestJS 10" />
+  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript strict" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" />
+  <img src="https://img.shields.io/badge/TypeORM-0.3-orange" alt="TypeORM" />
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+API backend d'un **ERP web sur mesure**, développée avec [NestJS](https://nestjs.com/).
+Le système couvre la gestion complète d'une activité de production/négoce :
+stock multi-entrepôts, composants et produits finis avec nomenclature (BOM),
+commandes, gestion commerciale (devis/factures/avoirs/bons de livraison),
+utilisateurs & rôles, dashboard, emails/notifications et génération de PDF.
 
-## Project setup
+## Modules fonctionnels
 
-```bash
-$ pnpm install
-```
+| # | Module | Contenu |
+|---|--------|---------|
+| 1 | **Authentification & Utilisateurs** | Connexion JWT, rôles (Super Admin, Admin Société, Responsable Stock, Responsable Commercial, Comptable, Opérateur), permissions granulaires, historique de connexions, reset de mot de passe |
+| 2 | **Entrepôts** | Multi-entrepôts, stock consolidé, transferts inter-entrepôts, inventaire, alertes stock minimum |
+| 3 | **Composants** | CRUD, références uniques, catégories, fournisseurs, historique entrées/sorties, codes-barres/QR |
+| 4 | **Produits finis & Nomenclature (BOM)** | Définition des composants requis, calcul automatique du stock produit disponible, décrémentation automatique à la validation de commande, coût de revient, variantes |
+| 5 | **Commandes** | Workflow de validation (Brouillon → Confirmée → En préparation → Expédié → Livrée / Annulée), déduction stock automatique, historique, PDF |
+| 6 | **Commercial** | Devis (avec conversion en facture), factures (TVA, numérotation auto, facturation partielle), avoirs (avec retour de stock), bons de livraison |
+| 7 | **Dashboard & Analytics** | Chiffre d'affaires, produits les plus vendus, état du stock, ruptures, performance par entrepôt, KPIs, export Excel/PDF |
+| 8 | **Emails & Notifications** | Emails automatiques (devis, factures, relances, alertes stock), file d'attente (Bull/Redis), suivi temps réel (SSE), historique |
+| 9 | **Génération PDF** | Factures, devis, bons de livraison, avoirs, inventaires, rapports |
 
-## Compile and run the project
+## Stack technique
 
-```bash
-# development
-$ pnpm run start
+- **Framework :** NestJS 10 (TypeScript strict)
+- **Base de données :** PostgreSQL 16 via TypeORM
+- **Emails :** `@nestjs-modules/mailer` + Nodemailer (SMTP Gmail), file Bull + Redis
+- **Temps réel :** Server-Sent Events (statut d'envoi d'emails)
+- **Documents :** PDFKit (PDF), ExcelJS (export Excel)
+- **Auth :** Passport + JWT (access token courte durée + refresh token httpOnly)
 
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Installation
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+pnpm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Copier le fichier d'environnement et renseigner les variables (voir `.env.example` si présent — base de données, JWT, SMTP, Redis) :
 
-## Resources
+```bash
+cp .env.example .env
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## Lancer le projet
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+# développement (watch mode)
+pnpm run start:dev
 
-## Support
+# production
+pnpm run build
+pnpm run start:prod
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Base de données
 
-## Stay in touch
+```bash
+# peupler la base avec les rôles, permissions et données de départ
+pnpm run seed
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# resynchroniser les permissions après ajout de nouvelles routes protégées
+pnpm run permissions:sync
+```
 
-## License
+## Qualité & vérifications
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+# vérification TypeScript (sans compiler) — à lancer avant tout commit
+pnpm run typecheck
+
+# lint
+pnpm run lint
+
+# tests unitaires
+pnpm run test
+
+# tests e2e
+pnpm run test:e2e
+
+# couverture de tests
+pnpm run test:cov
+```
+
+Un hook **pre-commit** (Husky) exécute `typecheck` automatiquement avant
+chaque commit, et le même contrôle tourne en CI (GitHub Actions) sur chaque
+push/pull request — voir `.github/workflows/ci.yml`.
+
+## Architecture — points notables
+
+- **Verrous pessimistes** sur les opérations de stock pour garantir l'atomicité des déductions concurrentes
+- **Machines à états** pour le cycle de vie des commandes et des documents commerciaux
+- **RBAC/ABAC hybride** : rôles + permissions granulaires par action
+- **EmailsService** centralise tout l'envoi d'emails (log, file d'attente, SSE) — les autres modules (Documents, Auth) délèguent à ce service plutôt que d'appeler `MailerService` directement
+
+## Ressources NestJS
+
+- [Documentation NestJS](https://docs.nestjs.com)
+- [Documentation TypeORM](https://typeorm.io)
