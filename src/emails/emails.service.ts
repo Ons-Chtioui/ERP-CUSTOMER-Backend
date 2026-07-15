@@ -28,8 +28,9 @@ export interface SendEmailOptions {
   to:            string;
   toName?:       string;
   subject:       string;
-  template:      string;
-  context:       Record<string, any>;
+  /** HTML à envoyer — généré par les helpers métier */
+  html:          string;
+  template?:     string; // conservé pour logs
   relatedType?:  string;
   relatedId?:    number;
   createdBy?:    number;
@@ -95,6 +96,7 @@ export class EmailsService {
         toName:      opts.toName     ?? null,
         subject:     opts.subject,
         template:    opts.template,
+        html:        opts.html,       // FIX Bug #6: stocker le HTML pour resend()
         relatedType: opts.relatedType ?? null,
         relatedId:   opts.relatedId   ?? null,
         createdBy:   opts.createdBy   ?? null,
@@ -126,8 +128,7 @@ export class EmailsService {
       await this.mailerService.sendMail({
         to:          opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
         subject:     opts.subject,
-        template:    opts.template,
-        context:     opts.context,
+        html:        opts.html,
         attachments: opts.attachments,
       });
 
@@ -173,6 +174,7 @@ export class EmailsService {
         toName:      opts.toName     ?? null,
         subject:     opts.subject,
         template:    opts.template,
+        html:        opts.html,       // FIX Bug #6: stocker le HTML pour resend()
         relatedType: opts.relatedType ?? null,
         relatedId:   opts.relatedId   ?? null,
         createdBy:   opts.createdBy   ?? null,
@@ -202,18 +204,20 @@ export class EmailsService {
   }
 
   // ── Renvoyer un email échoué ──────────────────────────────────
+  // FIX Bug #6: resend() utilise log.html au lieu d'un context:{} invalide
   async resend(logId: number): Promise<{ logId: number; jobId: string | number }> {
     const log = await this.logRepo.findOne({ where: { id: logId } });
     if (!log) throw new Error(`EmailLog #${logId} introuvable`);
+    if (!log.html) throw new Error(`EmailLog #${logId} : HTML manquant, impossible de renvoyer`);
 
     return this.sendQueued({
       to:          log.toEmail,
       toName:      log.toName    ?? undefined,
       subject:     log.subject,
+      html:        log.html,
       template:    log.template,
       relatedType: log.relatedType ?? undefined,
       relatedId:   log.relatedId   ?? undefined,
-      context:     {},
     });
   }
 
@@ -228,122 +232,87 @@ export class EmailsService {
    */
   async sendQuoteEmail(quote: any, pdfBuffer?: Buffer, userId?: number): Promise<void> {
     const attachments = pdfBuffer
-      ? [{
-          filename:    `${quote.reference}.pdf`,
-          content:     pdfBuffer,
-          contentType: 'application/pdf',
-        }]
+      ? [{ filename: `${quote.reference}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }]
       : undefined;
 
+    const lines = quote.lines?.map((l: any) => `
+      <tr>
+        <td>${l.product?.nom ?? l.description ?? ''}</td>
+        <td style="text-align:right">${l.quantity}</td>
+        <td style="text-align:right">${Number(l.unitPrice).toFixed(3)} TND</td>
+        <td style="text-align:right">${Number(l.totalHt).toFixed(3)} TND</td>
+      </tr>`).join('') ?? '';
+
     await this.sendNow({
-      to:       quote.client.email,
-      toName:   quote.client.name,
-      subject:  `Devis ${quote.reference} — ${process.env.COMPANY_NAME ?? 'ERP'}`,
+      to: quote.client.email, toName: quote.client.name,
+      subject: `Devis ${quote.reference} — ${process.env.COMPANY_NAME ?? 'ERP'}`,
       template: 'quote',
-      context: {
-        reference:   quote.reference,
-        clientName:  quote.client.name,
-        validUntil:  new Date(quote.validUntil).toLocaleDateString('fr-FR'),
-        lines:       quote.lines.map((l: any) => ({
-          productName: l.product?.nom ?? l.description ?? '',
-          quantity:    l.quantity,
-          unitPrice:   Number(l.unitPrice).toFixed(3),
-          totalHt:     Number(l.totalHt).toFixed(3),
-        })),
-        totalHt:     Number(quote.totalHt).toFixed(3),
-        totalTva:    Number(quote.totalTva).toFixed(3),
-        totalTtc:    Number(quote.totalTtc).toFixed(3),
-        note:        quote.note ?? null,
-        companyName: process.env.COMPANY_NAME    ?? 'Mon ERP',
-        companyAddress: process.env.COMPANY_ADDRESS ?? '',
-        quoteUrl:    `${process.env.APP_URL}/quotes/${quote.id}`,
-      },
-      attachments,
-      relatedType: 'quote',
-      relatedId:   quote.id,
-      createdBy:   userId,
+      html: `<html><body style="font-family:Arial;font-size:14px;color:#1f2937">
+        <h2 style="color:#3B4EFF">Devis ${quote.reference}</h2>
+        <p>Bonjour <strong>${quote.client.name}</strong>,</p>
+        <p>Veuillez trouver votre devis ci-dessous. Valide jusqu'au ${new Date(quote.validUntil).toLocaleDateString('fr-TN')}.</p>
+        <table width="100%" cellspacing="0" cellpadding="8" border="1" style="border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:#3B4EFF;color:#fff"><th>Désignation</th><th>Qté</th><th>PU HT</th><th>Total HT</th></tr></thead>
+          <tbody>${lines}</tbody>
+        </table>
+        <p><strong>Total HT:</strong> ${Number(quote.totalHt).toFixed(3)} TND &nbsp;|&nbsp;
+           <strong>TVA:</strong> ${Number(quote.totalTva).toFixed(3)} TND &nbsp;|&nbsp;
+           <strong>Total TTC:</strong> ${Number(quote.totalTtc).toFixed(3)} TND</p>
+        <p style="color:#6b7280;font-size:12px">${process.env.COMPANY_NAME ?? 'Mon ERP'}</p>
+      </body></html>`,
+      attachments, relatedType: 'quote', relatedId: quote.id, createdBy: userId,
     });
   }
 
-  async sendInvoiceEmail(
-    invoice: any,
-    pdfBuffer?: Buffer,
-    userId?: number,
-  ): Promise<void> {
+  async sendInvoiceEmail(invoice: any, pdfBuffer?: Buffer, userId?: number): Promise<void> {
     const attachments = pdfBuffer
-      ? [{
-          filename:    `${invoice.reference}.pdf`,
-          content:     pdfBuffer,
-          contentType: 'application/pdf',
-        }]
+      ? [{ filename: `${invoice.reference}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }]
       : undefined;
 
+    const lines = invoice.lines?.map((l: any) => `
+      <tr>
+        <td>${l.description ?? l.product?.nom ?? ''}</td>
+        <td style="text-align:right">${l.quantity}</td>
+        <td style="text-align:right">${Number(l.unitPrice).toFixed(3)} TND</td>
+        <td style="text-align:right">${Number(l.totalHt).toFixed(3)} TND</td>
+      </tr>`).join('') ?? '';
+
     await this.sendNow({
-      to:       invoice.client.email,
-      toName:   invoice.client.name,
-      subject:  `Facture ${invoice.reference} — ${process.env.COMPANY_NAME ?? 'ERP'}`,
+      to: invoice.client.email, toName: invoice.client.name,
+      subject: `Facture ${invoice.reference} — ${process.env.COMPANY_NAME ?? 'ERP'}`,
       template: 'invoice',
-      context: {
-        reference:   invoice.reference,
-        clientName:  invoice.client.name,
-        dueDate:     invoice.dueDate
-                       ? new Date(invoice.dueDate).toLocaleDateString('fr-FR')
-                       : null,
-        lines:       invoice.lines.map((l: any) => ({
-          description: l.description,
-          quantity:    l.quantity,
-          unitPrice:   Number(l.unitPrice).toFixed(3),
-          totalHt:     Number(l.totalHt).toFixed(3),
-        })),
-        totalHt:     Number(invoice.totalHt).toFixed(3),
-        totalTva:    Number(invoice.totalTva).toFixed(3),
-        totalTtc:    Number(invoice.totalTtc).toFixed(3),
-        companyName: process.env.COMPANY_NAME ?? 'Mon ERP',
-        isReminder:  false,
-      },
-      attachments,
-      relatedType: 'invoice',
-      relatedId:   invoice.id,
-      createdBy:   userId,
+      html: `<html><body style="font-family:Arial;font-size:14px;color:#1f2937">
+        <h2 style="color:#10b981">Facture ${invoice.reference}</h2>
+        <p>Bonjour <strong>${invoice.client.name}</strong>,</p>
+        <table width="100%" cellspacing="0" cellpadding="8" border="1" style="border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:#10b981;color:#fff"><th>Description</th><th>Qté</th><th>PU HT</th><th>Total HT</th></tr></thead>
+          <tbody>${lines}</tbody>
+        </table>
+        <p><strong>Total HT:</strong> ${Number(invoice.totalHt).toFixed(3)} TND &nbsp;|&nbsp;
+           <strong>TVA:</strong> ${Number(invoice.totalTva).toFixed(3)} TND &nbsp;|&nbsp;
+           <strong>Total TTC:</strong> ${Number(invoice.totalTtc).toFixed(3)} TND</p>
+        <p style="color:#6b7280;font-size:12px">${process.env.COMPANY_NAME ?? 'Mon ERP'}</p>
+      </body></html>`,
+      attachments, relatedType: 'invoice', relatedId: invoice.id, createdBy: userId,
     });
   }
 
-  /**
-   * NOUVEAU (Bug #4 audit) — envoi du bon de livraison par email.
-   * Manquait dans EmailsService ; DocumentsService.sendDeliveryNoteEmail()
-   * appelait mailer.sendMail() directement, sans queue/log/SSE.
-   */
-  async sendDeliveryNoteEmail(
-    deliveryNote: any,
-    pdfBuffer?: Buffer,
-    userId?: number,
-  ): Promise<void> {
+  async sendDeliveryNoteEmail(deliveryNote: any, pdfBuffer?: Buffer, userId?: number): Promise<void> {
     const attachments = pdfBuffer
-      ? [{
-          filename:    `${deliveryNote.reference}.pdf`,
-          content:     pdfBuffer,
-          contentType: 'application/pdf',
-        }]
+      ? [{ filename: `${deliveryNote.reference}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }]
       : undefined;
 
     await this.sendNow({
-      to:       deliveryNote.client.email,
-      toName:   deliveryNote.client.name,
-      subject:  `Bon de livraison ${deliveryNote.reference} — ${process.env.COMPANY_NAME ?? 'ERP'}`,
+      to: deliveryNote.client.email, toName: deliveryNote.client.name,
+      subject: `Bon de livraison ${deliveryNote.reference} — ${process.env.COMPANY_NAME ?? 'ERP'}`,
       template: 'delivery-note',
-      context: {
-        reference:    deliveryNote.reference,
-        clientName:   deliveryNote.client.name,
-        status:       deliveryNote.status,
-        deliveredAt:  deliveryNote.deliveredAt
-                        ? new Date(deliveryNote.deliveredAt).toLocaleDateString('fr-FR')
-                        : null,
-        companyName:  process.env.COMPANY_NAME ?? 'Mon ERP',
-      },
-      attachments,
-      relatedType: 'delivery_note',
-      relatedId:   deliveryNote.id,
-      createdBy:   userId,
+      html: `<html><body style="font-family:Arial;font-size:14px;color:#1f2937">
+        <h2>Bon de livraison ${deliveryNote.reference}</h2>
+        <p>Bonjour <strong>${deliveryNote.client.name}</strong>,</p>
+        <p>Votre commande a été prise en charge. Statut : <strong>${deliveryNote.status}</strong></p>
+        <p style="color:#6b7280;font-size:12px">${process.env.COMPANY_NAME ?? 'Mon ERP'}</p>
+      </body></html>`,
+      attachments, relatedType: 'delivery_note', relatedId: deliveryNote.id, createdBy: userId,
     });
   }
 
@@ -351,58 +320,52 @@ export class EmailsService {
     const daysOverdue = Math.floor(
       (Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24),
     );
-    const amountDue = (Number(invoice.totalTtc) - Number(invoice.amountPaid)).toFixed(3);
+    const amountDue = (Number(invoice.totalTtc) - Number(invoice.amountPaid ?? 0)).toFixed(3);
 
     await this.sendQueued({
-      to:       invoice.client.email,
-      toName:   invoice.client.name,
-      subject:  `⚠️ Rappel paiement — Facture ${invoice.reference}`,
+      to: invoice.client.email, toName: invoice.client.name,
+      subject: `⚠️ Rappel paiement — Facture ${invoice.reference}`,
       template: 'invoice',
-      context: {
-        reference:   invoice.reference,
-        clientName:  invoice.client.name,
-        dueDate:     new Date(invoice.dueDate).toLocaleDateString('fr-FR'),
-        daysOverdue,
-        amountDue,
-        companyName: process.env.COMPANY_NAME ?? 'Mon ERP',
-        isReminder:  true,
-        lines:       invoice.lines?.map((l: any) => ({
-          description: l.description,
-          quantity:    l.quantity,
-          unitPrice:   Number(l.unitPrice).toFixed(3),
-          totalHt:     Number(l.totalHt).toFixed(3),
-        })) ?? [],
-        totalHt:   Number(invoice.totalHt).toFixed(3),
-        totalTva:  Number(invoice.totalTva).toFixed(3),
-        totalTtc:  Number(invoice.totalTtc).toFixed(3),
-      },
-      relatedType: 'invoice',
-      relatedId:   invoice.id,
+      html: `<html><body style="font-family:Arial;font-size:14px;color:#1f2937">
+        <h2 style="color:#dc2626">⚠️ Relance de paiement — ${invoice.reference}</h2>
+        <p>Bonjour <strong>${invoice.client.name}</strong>,</p>
+        <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:14px;margin:16px 0">
+          La facture <strong>${invoice.reference}</strong> est en attente depuis <strong>${daysOverdue} jour(s)</strong>.<br>
+          Montant dû : <strong>${amountDue} TND</strong>
+        </div>
+        <p style="color:#6b7280;font-size:12px">${process.env.COMPANY_NAME ?? 'Mon ERP'}</p>
+      </body></html>`,
+      relatedType: 'invoice', relatedId: invoice.id,
     });
   }
 
-  /**
-   * FIX (Bug #2 audit) : accepte désormais les objets retournés par la requête
-   * SQL corrigée de StockAlertsService/EmailSchedulerService — qui exposent
-   * stockTotal/seuilAlerte (et plus quantiteDisponible/stockMinimum qui
-   * n'existent pas sur l'entité Component). On garde un fallback pour rester
-   * compatible avec d'éventuels appels existants.
-   */
   async sendStockAlert(components: any[], recipientEmail: string): Promise<void> {
+    const rows = components.map((c) => `
+      <tr>
+        <td><strong>${c.nom ?? c.name}</strong></td>
+        <td style="font-family:monospace">${c.reference}</td>
+        <td style="text-align:right;color:${Number(c.stockTotal ?? c.quantiteDisponible ?? 0) <= 0 ? '#dc2626' : '#d97706'}">
+          ${c.stockTotal ?? c.quantiteDisponible}
+        </td>
+        <td style="text-align:right;color:#6b7280">${c.seuilAlerte ?? c.stockMinimum}</td>
+        <td>${Number(c.stockTotal ?? c.quantiteDisponible ?? 0) <= 0 ? 'RUPTURE' : 'CRITIQUE'}</td>
+      </tr>`).join('');
+
     await this.sendQueued({
-      to:       recipientEmail,
-      subject:  `⚠️ Alerte stock — ${components.length} composant(s) critique(s)`,
+      to: recipientEmail,
+      subject: `⚠️ Alerte stock — ${components.length} composant(s) critique(s)`,
       template: 'stock-alert',
-      context: {
-        components: components.map((c) => ({
-          name:      c.nom ?? c.name,
-          reference: c.reference,
-          stock:     c.stockTotal   ?? c.quantiteDisponible,
-          minimum:   c.seuilAlerte  ?? c.stockMinimum,
-          isRupture: Number(c.stockTotal ?? c.quantiteDisponible ?? 0) <= 0,
-        })),
-        companyName: process.env.COMPANY_NAME ?? 'Mon ERP',
-      },
+      html: `<html><body style="font-family:Arial;font-size:14px;color:#1f2937">
+        <h2 style="color:#dc2626">⚠️ Alerte Stock Critique</h2>
+        <p>${components.length} composant(s) nécessitent votre attention :</p>
+        <table width="100%" cellspacing="0" cellpadding="8" border="1" style="border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:#dc2626;color:#fff">
+            <th>Composant</th><th>Référence</th><th>Stock</th><th>Minimum</th><th>État</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p style="color:#6b7280;font-size:12px">${process.env.COMPANY_NAME ?? 'Mon ERP'} — Alerte automatique.</p>
+      </body></html>`,
       relatedType: 'alert',
     });
   }

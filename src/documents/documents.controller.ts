@@ -7,6 +7,7 @@ import { DocumentsService } from './documents.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermission } from '../common/decorators/require-permission.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('documents')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -29,10 +30,14 @@ export class DocumentsController {
     this.streamPdf(res, buffer, filename);
   }
 
+  // FIX Bug #4 : @CurrentUser() injecté pour tracer qui envoie l'email (EmailLog.createdBy)
   @Post('quotes/:id/send')
   @RequirePermission('quotes.edit')
-  sendQuote(@Param('id', ParseIntPipe) id: number) {
-    return this.service.sendQuoteEmail(id);
+  sendQuote(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: { id: number },
+  ) {
+    return this.service.sendQuoteEmail(id, user?.id);
   }
 
   @Get('invoices/:id/pdf')
@@ -42,10 +47,14 @@ export class DocumentsController {
     this.streamPdf(res, buffer, filename);
   }
 
+  // FIX Bug #4 : @CurrentUser() injecté pour tracer qui envoie l'email (EmailLog.createdBy)
   @Post('invoices/:id/send')
   @RequirePermission('invoices.edit')
-  sendInvoice(@Param('id', ParseIntPipe) id: number) {
-    return this.service.sendInvoiceEmail(id);
+  sendInvoice(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: { id: number },
+  ) {
+    return this.service.sendInvoiceEmail(id, user?.id);
   }
 
   @Get('delivery-notes/:id/pdf')
@@ -53,6 +62,16 @@ export class DocumentsController {
   async deliveryPdf(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
     const { buffer, filename } = await this.service.generateDeliveryNotePdf(id);
     this.streamPdf(res, buffer, filename);
+  }
+
+  // FIX Bug #4 : route ajoutée — n'existait pas du tout alors que le service était prêt
+  @Post('delivery-notes/:id/send')
+  @RequirePermission('delivery.edit')
+  sendDeliveryNote(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: { id: number },
+  ) {
+    return this.service.sendDeliveryNoteEmail(id, user?.id);
   }
 
   @Get('orders/:id/pdf')

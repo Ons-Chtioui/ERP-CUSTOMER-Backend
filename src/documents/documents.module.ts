@@ -13,10 +13,12 @@ import { ProductInventory } from '../products/entities/product-inventory.entity'
 import { BomLine }         from '../products/entities/bom-line.entity';
 import { InventoryItem }   from '../components/entities/inventory-item.entity';
 
-// MailerService est fourni via le MailerModule global déjà configuré dans AppModule.
-// Il n'est PAS besoin de réimporter MailerModule.forRootAsync ici — NestJS le résout
-// automatiquement depuis le contexte global si MailerModule est isGlobal ou partagé.
-// On utilise le MailerService directement via injection de dépendance.
+// FIX Bug #4 : import EmailsModule pour déléguer l'envoi d'emails à EmailsService
+// (au lieu d'appeler MailerService directement, ce qui court-circuitait logs/queue/SSE)
+import { EmailsModule } from '../emails/emails.module';
+
+// MailerService est fourni globalement via MailerModule (isGlobal: true) dans AppModule.
+// EmailsService est fourni via EmailsModule importé ci-dessous.
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { InventoryItem }   from '../components/entities/inventory-item.entity';
       BomLine,
       InventoryItem,
     ]),
+    EmailsModule,
   ],
   providers:   [DocumentsService],
   controllers: [DocumentsController],

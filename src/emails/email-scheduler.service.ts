@@ -59,7 +59,8 @@ export class EmailSchedulerService {
 
     const comptables = await this.userRepo
       .createQueryBuilder('u')
-      .where("u.role IN (:...roles)", {
+      .innerJoin('u.role', 'r')
+      .where('r.nom IN (:...roles)', {
         roles: ['super_admin', 'admin', 'comptable'],
       })
       .andWhere('u.is_active = true')
@@ -126,8 +127,9 @@ export class EmailSchedulerService {
 
     const managers = await this.userRepo
       .createQueryBuilder('u')
-      .where("u.role IN (:...roles)", {
-        roles: ['super_admin', 'admin', 'responsable_stock'],
+      .innerJoin('u.role', 'r')
+      .where('r.nom IN (:...roles)', {
+        roles: ['super_admin', 'admin', 'resp_stock'],
       })
       .andWhere('u.is_active = true')
       .getMany();

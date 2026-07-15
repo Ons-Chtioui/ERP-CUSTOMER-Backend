@@ -30,7 +30,7 @@ import { DocumentsModule } from './documents/documents.module';
 
 import { AnalyticsModule } from './analytics/analytics.module';
 import { EmailsModule } from './emails/emails.module';
-import { EventsModule } from './events/events.module';
+
 
 @Module({
   imports: [
@@ -54,6 +54,7 @@ import { EventsModule } from './events/events.module';
 
     // ── Mailer global — accessible dans tous les modules ──────────
     MailerModule.forRootAsync({
+     
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
         transport: {
@@ -94,7 +95,7 @@ import { EventsModule } from './events/events.module';
     DocumentsModule,
     AnalyticsModule,
     EmailsModule,
-    EventsModule,
+
   ],
   controllers: [AppController],
   providers: [AppService],

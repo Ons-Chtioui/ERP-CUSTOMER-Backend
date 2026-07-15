@@ -31,6 +31,7 @@ const mockUser: Partial<User> = {
     id: 1,
     nom: 'admin',
     label: 'Admin',
+     description: '...', 
     permissions: [],
     users: [],
     createdAt: new Date(),

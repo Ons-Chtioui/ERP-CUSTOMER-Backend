@@ -33,6 +33,10 @@ export class EmailLog {
   @Column({ type: 'varchar', length: 20, default: EmailStatus.PENDING })
   declare status: EmailStatus;
 
+  /** HTML envoyé — conservé pour permettre le resend() */
+  @Column({ type: 'text', nullable: true })
+  declare html: string | null;
+
   @Column({ type: 'text', nullable: true })
   declare error: string | null;
 

@@ -1,6 +1,6 @@
 // src/documents/documents.service.ts
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { EmailsService } from '../emails/emails.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { PdfBuilder, fmtMoney, fmtDate, statusColor } from './pdf-builder.util';
@@ -31,7 +31,7 @@ export class DocumentsService {
     @InjectRepository(ProductInventory) private productInventoryRepo: Repository<ProductInventory>,
     @InjectRepository(BomLine) private bomLineRepo: Repository<BomLine>,
     @InjectRepository(InventoryItem) private inventoryItemRepo: Repository<InventoryItem>,
-    private readonly mailer: MailerService,
+    private readonly emailsService: EmailsService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -439,48 +439,19 @@ export class DocumentsService {
   }
 
   // ─── ENVOI EMAIL DEVIS ──────────────────────────────────────────
-  async sendQuoteEmail(id: number): Promise<Quote> {
+  // FIX Bug #4 : délègue à EmailsService au lieu d'appeler MailerService directement
+  async sendQuoteEmail(id: number, userId?: number): Promise<Quote> {
     const quote = await this.quoteRepo.findOne({
       where: { id },
-      relations: { client: true },
+      relations: { client: true, lines: { product: true } },
     });
     if (!quote) throw new NotFoundException(`Devis #${id} introuvable`);
     if (!quote.client.email) {
       throw new BadRequestException("Le client n'a pas d'adresse email");
     }
 
-    const { buffer, filename } = await this.generateQuotePdf(id);
-
-    await this.mailer.sendMail({
-      to: quote.client.email,
-      subject: `Devis ${quote.reference} — ${COMPANY}`,
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <div style="background:#3B4EFF;padding:24px;border-radius:8px 8px 0 0">
-            <h1 style="color:white;margin:0;font-size:20px">${COMPANY}</h1>
-          </div>
-          <div style="padding:24px;background:#f9fafb;border:1px solid #e5e7eb">
-            <p>Bonjour <strong>${quote.client.name}</strong>,</p>
-            <p>Veuillez trouver ci-joint votre devis <strong>${quote.reference}</strong>.</p>
-            <table style="width:100%;border-collapse:collapse;margin:16px 0">
-              <tr><td style="padding:8px;color:#6b7280">Montant HT</td>
-                  <td style="padding:8px;font-weight:bold">${fmtMoney(quote.totalHt)}</td></tr>
-              <tr><td style="padding:8px;color:#6b7280">TVA</td>
-                  <td style="padding:8px">${fmtMoney(quote.totalTva)}</td></tr>
-              <tr style="background:#f3f4f6">
-                  <td style="padding:8px;color:#6b7280">Total TTC</td>
-                  <td style="padding:8px;font-weight:bold;color:#3B4EFF;font-size:18px">${fmtMoney(quote.totalTtc)}</td></tr>
-              <tr><td style="padding:8px;color:#6b7280">Validité</td>
-                  <td style="padding:8px">${fmtDate(quote.validUntil)}</td></tr>
-            </table>
-            <p style="color:#6b7280;font-size:13px">
-              Pour toute question, n'hésitez pas à nous contacter.
-            </p>
-            <p>Cordialement,<br/><strong>${COMPANY}</strong></p>
-          </div>
-        </div>`,
-      attachments: [{ filename, content: buffer, contentType: 'application/pdf' }],
-    });
+    const { buffer } = await this.generateQuotePdf(id);
+    await this.emailsService.sendQuoteEmail(quote, buffer, userId);
 
     if (quote.status === QuoteStatus.DRAFT) {
       quote.status = QuoteStatus.SENT;
@@ -494,10 +465,11 @@ export class DocumentsService {
   }
 
   // ─── ENVOI EMAIL FACTURE ────────────────────────────────────────
-  async sendInvoiceEmail(id: number): Promise<Invoice> {
+  // FIX Bug #4 : délègue à EmailsService au lieu d'appeler MailerService directement
+  async sendInvoiceEmail(id: number, userId?: number): Promise<Invoice> {
     const invoice = await this.invoiceRepo.findOne({
       where: { id },
-      relations: { client: true },
+      relations: { client: true, lines: { product: true } },
     });
     if (!invoice) throw new NotFoundException(`Facture #${id} introuvable`);
     if (invoice.type === InvoiceType.CREDIT_NOTE) {
@@ -507,43 +479,8 @@ export class DocumentsService {
       throw new BadRequestException("Le client n'a pas d'adresse email");
     }
 
-    const { buffer, filename } = await this.generateInvoicePdf(id);
-    const restant = Number(invoice.totalTtc) - Number(invoice.amountPaid);
-
-    await this.mailer.sendMail({
-      to: invoice.client.email,
-      subject: `Facture ${invoice.reference} — ${COMPANY}`,
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <div style="background:#3B4EFF;padding:24px;border-radius:8px 8px 0 0">
-            <h1 style="color:white;margin:0;font-size:20px">${COMPANY}</h1>
-          </div>
-          <div style="padding:24px;background:#f9fafb;border:1px solid #e5e7eb">
-            <p>Bonjour <strong>${invoice.client.name}</strong>,</p>
-            <p>Veuillez trouver ci-joint votre facture <strong>${invoice.reference}</strong>.</p>
-            <table style="width:100%;border-collapse:collapse;margin:16px 0">
-              <tr style="background:#f3f4f6">
-                  <td style="padding:8px;color:#6b7280">Total TTC</td>
-                  <td style="padding:8px;font-weight:bold;font-size:18px">${fmtMoney(invoice.totalTtc)}</td></tr>
-              ${Number(invoice.amountPaid) > 0 ? `
-              <tr><td style="padding:8px;color:#6b7280">Déjà payé</td>
-                  <td style="padding:8px;color:#10B981;font-weight:bold">${fmtMoney(invoice.amountPaid)}</td></tr>
-              <tr><td style="padding:8px;color:#6b7280">Restant dû</td>
-                  <td style="padding:8px;color:#EF4444;font-weight:bold;font-size:16px">${fmtMoney(restant)}</td></tr>
-              ` : ''}
-              ${invoice.dueDate ? `
-              <tr><td style="padding:8px;color:#6b7280">Échéance</td>
-                  <td style="padding:8px;font-weight:bold">${fmtDate(invoice.dueDate)}</td></tr>
-              ` : ''}
-            </table>
-            <p style="color:#6b7280;font-size:13px">
-              Pour toute question, n'hésitez pas à nous contacter.
-            </p>
-            <p>Cordialement,<br/><strong>${COMPANY}</strong></p>
-          </div>
-        </div>`,
-      attachments: [{ filename, content: buffer, contentType: 'application/pdf' }],
-    });
+    const { buffer } = await this.generateInvoicePdf(id);
+    await this.emailsService.sendInvoiceEmail(invoice, buffer, userId);
 
     if (invoice.status === InvoiceStatus.DRAFT) {
       invoice.status = InvoiceStatus.SENT;
@@ -554,7 +491,8 @@ export class DocumentsService {
   }
 
   // ─── ENVOI EMAIL BON DE LIVRAISON ──────────────────────────────
-  async sendDeliveryNoteEmail(id: number): Promise<DeliveryNote> {
+  // FIX Bug #4 : délègue à EmailsService au lieu d'appeler MailerService directement
+  async sendDeliveryNoteEmail(id: number, userId?: number): Promise<DeliveryNote> {
     const dn = await this.dnRepo.findOne({
       where: { id },
       relations: { client: true },
@@ -564,35 +502,8 @@ export class DocumentsService {
       throw new BadRequestException("Le client n'a pas d'adresse email");
     }
 
-    const { buffer, filename } = await this.generateDeliveryNotePdf(id);
-
-    await this.mailer.sendMail({
-      to: dn.client.email,
-      subject: `Bon de livraison ${dn.reference} — ${COMPANY}`,
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <div style="background:#3B4EFF;padding:24px;border-radius:8px 8px 0 0">
-            <h1 style="color:white;margin:0;font-size:20px">${COMPANY}</h1>
-          </div>
-          <div style="padding:24px;background:#f9fafb;border:1px solid #e5e7eb">
-            <p>Bonjour <strong>${dn.client.name}</strong>,</p>
-            <p>Veuillez trouver ci-joint votre bon de livraison <strong>${dn.reference}</strong>.</p>
-            <table style="width:100%;border-collapse:collapse;margin:16px 0">
-              <tr><td style="padding:8px;color:#6b7280">Statut</td>
-                  <td style="padding:8px;font-weight:bold">${dn.status}</td></tr>
-              ${dn.deliveredAt ? `
-              <tr><td style="padding:8px;color:#6b7280">Livré le</td>
-                  <td style="padding:8px">${fmtDate(dn.deliveredAt)}</td></tr>
-              ` : ''}
-            </table>
-            <p style="color:#6b7280;font-size:13px">
-              Pour toute question, n'hésitez pas à nous contacter.
-            </p>
-            <p>Cordialement,<br/><strong>${COMPANY}</strong></p>
-          </div>
-        </div>`,
-      attachments: [{ filename, content: buffer, contentType: 'application/pdf' }],
-    });
+    const { buffer } = await this.generateDeliveryNotePdf(id);
+    await this.emailsService.sendDeliveryNoteEmail(dn, buffer, userId);
 
     return dn;
   }

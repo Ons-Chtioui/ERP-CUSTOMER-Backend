@@ -43,18 +43,16 @@ export class EmailProcessor {
   // ── Traitement du job ─────────────────────────────────────────
   @Process('send')
   async handleSend(job: Job) {
-    const { to, toName, subject, template, context, attachments } = job.data;
+    const { to, toName, subject, html, attachments } = job.data;
 
-    this.logger.log(`[Queue] Sending email to ${to} (template: ${template})`);
+    this.logger.log(`[Queue] Sending email to ${to}`);
 
     await this.mailerService.sendMail({
       to:          toName ? `${toName} <${to}>` : to,
       subject,
-      template,
-      context:     context ?? {},
+      html:        html ?? '<p>Email</p>',
       attachments,
     });
-    // Succès → géré par @OnQueueCompleted
   }
 
   // ── Job terminé avec succès ───────────────────────────────────
